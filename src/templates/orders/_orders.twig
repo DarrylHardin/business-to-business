@@ -1,0 +1,94 @@
+{% extends "business-to-business/_layouts/index" %}
+
+{% set title = "Orders"|t('business-to-business') %}
+{% set docTitle = title~' - '~'Business Orders' %}
+{# {% set elementType = 'craft\\commerce\\elements\\Order' %} #}
+{% set selectedTab = 'orders' %}
+{% set selectedSubnavItem = "orders" %}
+{# {% set bodyClass = (bodyClass is defined ? bodyClass~' ' : '') ~ "commerceorders commerceordersindex" %} #}
+
+{% do craft.app.view.registerTranslations('commerce', [
+    "Total Revenue",
+    "Last 7 days",
+    "Last 30 days",
+    "Last Week",
+    "Last Month",
+    "Custom Range",
+    "Apply"
+]) %}
+
+{# Content that should appear in the page header#}
+{% set extraPageHeaderHtml %}
+    {% block actionButton %}
+    {# {% if pdfUrl %} #}
+        <a class="btn" href="{{siteUrl}}csv" target="_blank">{{ 'Download CSV'|t('commerce') }}</a>
+        <div class="flex-grow"></div>
+    {# {% endif %} #}
+    {% endblock %}
+{% endset %}
+{% block content %}
+    {# <h2>{{ "voucher CP Section body goes here"|t('voucher') }}</h2>
+    <img src="{{ iconUrl }}" height="64" width="64" />
+    <p class="textline"></p> #}
+<style>
+    .flag{
+        background:red;
+        color:white;
+    }
+</style>
+{% set pastOrders = craft.orders.gatewayId(1).all() %}
+<table class="data fullwidth">
+<thead>
+    <tr>
+        <th>Date Ordered</th>
+        <th>User</th>
+        <th>Footwear Purchased w/Voucher</th>
+        <th>Order Number</th>
+        <th>Order Total</th>
+        <th>Charged to Employee</th>
+        <th>Charged to Voucher</th>
+        <th>Receipts</th>
+    </tr>
+</thead>
+{% set voucherTotal = 0 %}
+{% for order in pastOrders %}
+    {% set isValid = false %}
+    {% set flag = '' %}
+    {% set user = order.customer.user %}
+    {% if user %}
+        {% if user.isInGroup('employee') %}
+            {% for adjustment in order.adjustments %}
+                {# {% if adjustment.sourceSnapshot['businessId'] == 433 %} #}
+                            {% if adjustment.sourceSnapshot['businessId'] == 433 %}
+                                {% set isValid = true %}
+                            {% endif %}
+                    {% if isValid %}
+                        {% set voucher = order.adjustmentsTotal|abs %}
+                        {% if voucher == 0 %}
+                            {% set flag = 'flag' %}
+                        {% endif %}
+                        {% set total = order.totalPrice + voucher %}
+                        <tr class="">
+                        <td><span title="{{ order.dateOrdered|date('r') }}">{{ order.dateOrdered|date('D jS M Y') }}</span></td>
+                            
+                        <td>{{ user }} {{ user }}</td>
+                            <td>{% for item in order.lineItems %}{% if item.options['purchasedWithVoucher'] == 'yes' %} {{ item.description }} {% endif %}{% endfor %}</td>
+                            <td>{{ order.shortNumber }}</td>
+                        <td>{{ total|currency(order.currency)}}</td>
+                            <td>{{ order.totalPrice|currency(order.currency) }}</td>
+                            <td>{{ voucher|currency(order.currency) }}</td>
+                            {% set voucherTotal = voucherTotal + voucher %}
+                            {% if order.pdfUrl %}
+                                <td><strong>Receipt:</strong> <a href="{{ order.getPdfUrl('receipt') }}">Download</a></td>
+                            {% endif %}
+                        </tr>
+                    {% endif %}
+                {# {% endif %} #}
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+{% endfor %}	
+
+<h3>Business Total: {{ voucherTotal|currency('USD') }}</h3>
+
+{% endblock %}

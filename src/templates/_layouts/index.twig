@@ -1,0 +1,38 @@
+{% extends parentLayout ?? '_layouts/cp' %}
+
+{% do view.registerAssetBundle("importantcoding\\businesstobusiness\\assetbundles\\businesstobusiness\\BusinessToBusinessAsset") %}
+{% do view.registerAssetBundle("importantcoding\\businesstobusiness\\assetbundles\\businesscpsection\\BusinessCPSectionAsset") %}
+
+{% if title is not defined %}
+    {% set title = 'Business To Business' | t('business-to-business') %}
+{% endif %}
+
+{% set content %}
+    {% block blockContent %}
+
+    {% endblock %}
+
+    <hr>
+    
+    <div id="plugin-footer">
+        <div class="footer-left">
+            {% block footerButton %}
+
+            {% endblock %}
+        </div>
+
+        <div class="footer-right">
+            <a class="plugin-credit" href="https://importantcoding.com" target="_blank">
+
+
+                <div class="credit-pill">
+                    <div class="credit-mask">
+                        <div class="credit-wrap">
+                            {% include 'business-to-business/_svg/importantcoding.svg' %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+{% endset %}

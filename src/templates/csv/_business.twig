@@ -1,0 +1,31 @@
+{% requirePermission 'businessToBusiness-manageVouchers:' ~ businessId %}
+
+{# {% if currentUser.can('businessToBusiness-manageVouchers:' ~ business.id) or currentUser.can('admin') %} #}
+{% set options = {
+        header: ['Date Orderd', 'Employee Id', 'First Name', 'Last Name', 'Order Total', 'Voucher Total', 'Payroll Deduct' ],
+        content: []
+        } %}
+        {% set beam = craft.beam.create(options) %}
+
+{% set orders = craft.orders()
+.orderStatusId([9,10])
+.all() %}
+{% set billAmount = 0 %}
+{% for order in orders %}
+    {% if order.businessId == businessId %}
+        {% set employee = craft.businessToBusiness.getCurrentEmployee(order.user.id) %}
+        {% set voucher = order.adjustmentsTotal|abs %}
+        {# {% if voucher == 0 %}
+            {% set flag = 'flag' %}
+        {% endif %} #}
+        {% set total = order.totalPrice + voucher %}
+        {% do beam.append([order.dateOrdered|date('D jS M Y'), employee.title, employee.firstName, employee.lastName, total|currency(order.currency), voucher|currency(order.currency), order.totalPrice|currency(order.currency)]) %}
+        {% set billAmount = billAmount + voucher + order.totalPrice %}
+    {% endif %}
+{% endfor %}
+        {% do beam.append(['Total', billAmount|currency("USD")]) %}
+{% do beam.csv() %}
+{% exit %}
+{# {% else %}
+<h3>You do not have </h3>
+{% endif %} #}

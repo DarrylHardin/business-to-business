@@ -1,0 +1,58 @@
+{# @var craft \craft\web\twig\variables\CraftVariable #}
+{#
+/**
+ * Business To Business plugin for Craft CMS 3.x
+ *
+ * Business To Business index.twig
+ *
+ * @author    Darryl Hardin
+ * @copyright Copyright (c) 2019 Darryl Hardin
+ * @link      http://importantcoding.com
+ * @package   BusinessToBusiness
+ * @since     1.0.0
+ */
+#}
+
+{% extends '_layouts/elementindex' %}
+
+{% set title = 'Vouchers' | t('business-to-business') %}
+{% set docTitle = title ~ ' - Business To Business' %}
+{% set elementType = 'importantcoding\\businesstobusiness\\elements\\Voucher' %}
+{% set elementInstance = craft.app.elements.createElement(elementType) %}
+{% set context = 'index' %}
+{% set sources = craft.app.elementIndexes.getSources(elementType, 'index') %}
+{% set vouchers = craft.businessToBusiness.vouchers() %}
+{% set selectedSubnavItem = 'vouchers' %}
+{# {% block content %}
+    <div class="elementindex">
+        {% include "_elements/indexcontainer" with {
+            showSiteMenu: true
+        } %}
+    </div>
+{% endblock %} #}
+{% js %}
+    if (typeof Craft.BusinessToBusiness === 'undefined') {
+        Craft.BusinessToBusiness = {};
+    }
+
+    {% set businesses = [] %}
+
+    {% for business in craft.businessToBusiness.getEditableBusinesses() %}
+        {% if currentUser.can('businessToBusiness-manageVouchers:' ~ business.id) or currentUser.can('admin') %}
+            {% set businesses = businesses | merge([{
+                id: business.id,
+                name: business.name,
+                handle: business.handle,
+            }]) %}
+        {% endif %}
+    {% endfor %}
+
+    Craft.BusinessToBusiness.editableBusinesses = {{ businesses | json_encode | raw }};
+
+    {% if businessHandle is defined %}
+        window.defaultBusinessHandle = '{{ businessHandle }}';
+    {% endif %}
+{% endjs %}
+
+
+{% do view.registerAssetBundle("importantcoding\\businesstobusiness\\assetbundles\\voucherscpsection\\VouchersCPSectionAsset") %}

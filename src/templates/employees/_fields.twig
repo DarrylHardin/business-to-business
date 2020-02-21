@@ -1,0 +1,238 @@
+{% macro titleField(employee) %}
+	{%- import '_includes/forms' as forms -%}
+
+	{{ forms.textField({
+		label: 'Employee Number' | t('business-to-business'),
+		id: 'title',
+		name: 'title',
+		value: employee.title,
+		placeholder: 'Enter Employee Number' | t('business-to-business'),
+		errors: employee.getErrors('title'),
+		first: true,
+		autofocus: true,
+		required: true,
+		maxlength: 255
+	}) }}
+
+    {{ forms.textField({
+		label: 'First Name' | t('business-to-business'),
+		id: 'first-name',
+		name: 'firstName',
+		value: employee.firstName,
+		placeholder: 'Enter Employee Number' | t('business-to-business'),
+		errors: employee.getErrors('firstName'),
+		first: true,
+		autofocus: true,
+		required: true,
+		maxlength: 255
+	}) }}
+
+    {{ forms.textField({
+		label: 'Last Name' | t('business-to-business'),
+		id: 'last-name',
+		name: 'lastName',
+		value: employee.lastName,
+		placeholder: 'Enter Employee Number' | t('business-to-business'),
+		errors: employee.getErrors('lastName'),
+		first: true,
+		autofocus: true,
+		required: true,
+		maxlength: 255
+	}) }}
+
+    {{ forms.textField({
+		label: 'phone Number' | t('business-to-business'),
+		id: 'phone',
+		name: 'phone',
+		value: employee.phone,
+		placeholder: 'Enter Employee phone Number' | t('business-to-business'),
+		errors: employee.getErrors('phone'),
+		first: true,
+		autofocus: true,
+		maxlength: 255
+	}) }}
+
+    {{ forms.textField({
+		label: 'Email' | t('business-to-business'),
+		id: 'type-id',
+		name: 'email',
+		value: employee.email,
+		placeholder: 'Enter Email Address' | t('business-to-business'),
+		errors: employee.getErrors('email'),
+		first: true,
+		autofocus: true,
+		maxlength: 255
+	}) }}
+	{% set voucherFormOptions =[{ label: "None Selected", value: NULL }] %}
+	{% set vouchers = craft.businessToBusiness.getAllVouchers %}
+     {% for voucher in vouchers %}
+        {% set voucherFormOptions = voucherFormOptions|merge([{ label: voucher.name, value: voucher.id }]) %}
+    {% endfor %}
+	
+    {{ forms.selectField({
+        label: 'Voucher' | t('business-to-business'),
+        id: 'voucherId',
+        name: 'voucherId',
+        value: employee.voucherId,
+        options: voucherFormOptions,
+        errors: employee.getErrors('voucherId')
+    }) }}
+
+	{{ forms.textField({
+		label: 'Times Voucher Used' | t('business-to-business'),
+		id: 'times-voucher-used',
+		name: 'timesVoucherUsed',
+		value: employee.timesVoucherUsed,
+		placeholder: 'Enter Times Voucher Used' | t('business-to-business'),
+		errors: employee.getErrors('timesVoucherUsed'),
+		first: true,
+		autofocus: true,
+		maxlength: 255
+	}) }}
+
+    {{ forms.hidden({
+		label: 'Business' | t('business-to-business'),
+		id: 'type-id',
+		name: 'businessId',
+		value: employee.businessId,
+		placeholder: 'Enter Business' | t('business-to-business'),
+		errors: employee.getErrors('businessId'),
+		first: true,
+		autofocus: true,
+		maxlength: 255
+	}) }}
+
+    {{ forms.hidden({
+		label: 'UserID' | t('business-to-business'),
+		id: 'user-id',
+		name: 'userId',
+		value: employee.userId,
+		errors: employee.getErrors('userId'),
+		first: true,
+		autofocus: true,
+		maxlength: 255
+	}) }}
+
+    {{ forms.hidden({
+		label: 'EmployeeId' | t('business-to-business'),
+		id: 'employee-id',
+		name: 'employeeId',
+		value: employee.id,
+		errors: employee.getErrors('employeeId'),
+		first: true,
+		autofocus: true,
+		maxlength: 255
+	}) }}
+
+    {% set errors = employee.getErrors() %}
+    {% for error in errors %}
+        {% for things in error %}
+            {{ things }}
+        {% endfor %}    
+    {% endfor %}
+
+{% endmacro %}
+
+{# {% macro generalMetaFields(employee) %}
+    {%- import '_includes/forms' as forms -%}
+    
+    {{ forms.dateTimeField({
+        label: 'Post Date' | t('business-to-business'),
+        id: 'postDate',
+        name: 'postDate',
+        value: employee.postDate,
+        errors: employee.getErrors('postDate')
+    }) }}
+
+    {{ forms.dateTimeField({
+        label: 'Expiry Date' | t('business-to-business'),
+        id: 'expiryDate',
+        name: 'expiryDate',
+        value: employee.expiryDate,
+        errors: employee.getErrors('expiryDate')
+    }) }}
+{% endmacro %} #}
+
+{% macro behavioralMetaFields(employee) %}
+    {%- import '_includes/forms' as forms -%}
+
+    {# {{ forms.selectField({
+        label: 'Tax Category' | t('business-to-business'),
+        name: 'taxCategoryId',
+        value: employee.taxCategoryId,
+        required: true,
+        options: craft.commerce.taxCategories.getAllTaxCategoriesAsList()
+    }) }} #}
+
+    {# {% set shippingCategories = [] %}
+    {% for shippingCategory in craft.commerce.shippingCategories.getAllShippingCategories() %}
+        {% set shippingCategories = shippingCategories|merge([{ value: shippingCategory.id, label: shippingCategory.name }]) %}
+    {% endfor %}
+
+    {{ forms.selectField({
+        label: 'Shipping Category' | t('business-to-business'),
+        name: 'shippingCategoryId',
+        value: employee.shippingCategoryId,
+        required: true,
+        options: shippingCategories
+    }) }} #}
+{% endmacro %}
+
+{% macro generalFields(employee) %}
+    {%- import '_includes/forms' as forms -%}
+
+    {# {{ forms.textField({
+        id: 'sku',
+        label: 'SKU' | t('business-to-business'),
+        required: true,
+        name: 'sku',
+        value: employee.sku,
+        class: 'code',
+        placeholder: 'Enter SKU' | t('business-to-business'),
+        errors: employee.getErrors('sku')
+    }) }} #}
+
+    {{ forms.lightswitchField({
+        id: 'authorized',
+        name: 'authorized',
+        on: employee.authorized,
+        label: 'Authorized <span class="info">Tells us that this employees purchases are authorized by you.</span>' | t('business-to-business')
+    }) }}
+
+	{{ forms.dateTimeField({
+		label: 'Date Voucher Used <span class="info">Erase this date in order to allow employee to shop with voucher again without a voucher refresh.</span>' | t('business-to-business'),
+		id: 'date-voucher-used',
+		name: 'dateVoucherUsed',
+		value: employee.dateVoucherUsed|datetime,
+		errors: employee.getErrors('dateVoucherUsed'),
+		first: true,
+		autofocus: true,
+		maxlength: 255
+	}) }}
+{# 
+    {{ forms.textField({
+        id: 'amount',
+        label: 'Amount' | t('business-to-business'),
+        name: 'amount',
+        value: (employee.amount == '0' ? '0' | number : (employee.amount ?  employee.amount | number ?: '')),
+        placeholder: 'Enter amount' | t('business-to-business'),
+        unit: craft.commerce.paymentCurrencies.primaryPaymentCurrency.iso | upper,
+        errors: employee.getErrors('amount'),
+        fieldClass: employee.amount ? 'hidden'
+    }) }} #}
+
+    {# {% js %}
+        $(function() {
+            $(document).on('change', '#customAmount', function() {
+                var $priceField = $('#price-field');
+
+                if ($(this).hasClass('on')) {
+                    $priceField.addClass('hidden');
+                } else {
+                    $priceField.removeClass('hidden');
+                }
+            });
+        });
+    {% endjs %} #}
+{% endmacro %}
+

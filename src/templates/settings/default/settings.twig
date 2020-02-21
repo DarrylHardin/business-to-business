@@ -1,0 +1,45 @@
+{% extends "business-to-business/_layouts/settings" %}
+
+{% set selectedTab = 'settings' %}
+
+{% import "_includes/forms" as forms %}
+{% set fullPageForm = true %}
+{% block content %}
+    <h1>{{ "Default Settings"|t('business-to-business') }}</h1>
+    <h2>{{ "Business Settings"|t('business-to-business') }}</h2>
+
+    <input type="hidden" name="action" value="plugins/save-plugin-settings">
+    <input type="hidden" name="pluginHandle" value="business-to-business">
+
+{% namespace 'settings' %}
+
+        {% set discountRange = [] %}
+        
+        {% for discount in range(0, 100) %}
+                {% set discountRange = discountRange|merge([
+                    {label: discount ~ '%', value: discount}
+                ]) %}
+        {% endfor %}
+        
+
+
+        {{ forms.selectField({
+        label: 'Autofill business discount' | t('business-to-business'),
+        instructions: 'This is the default value that will fill new business discount fields, you can always change this value per business.' | t('business-to-business'),
+        name: 'defaultDiscount',
+        value: settings.defaultDiscount,
+        options: discountRange,
+        errors: settings.getErrors('defaultDiscount'),
+        required: true,
+        }) }}
+
+        {{ forms.lightswitchField({
+        label: 'Auto-verify Employees Default' | t('business-to-business'),
+        instructions: 'Save a click, set this to your most common default, you can always change this option per business.' | t('business-to-business'),
+        name: 'defaultAutoVerify',
+        on: settings.defaultAutoVerify,
+        errors: settings.getErrors('defaultAutoVerify'),
+        required: true,
+        }) }}
+{% endnamespace %}
+{% endblock %}

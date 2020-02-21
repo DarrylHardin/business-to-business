@@ -1,0 +1,26 @@
+{# @var craft \craft\web\twig\variables\CraftVariable #}
+{#
+/**
+ * Business To Business plugin for Craft CMS
+ *
+ * Voucher Field Settings
+ *
+ * @author    Darryl Hardin
+ * @copyright Copyright (c) 2019 Darryl Hardin
+ * @link      http://importantcoding.com
+ * @package   BusinessToBusiness
+ * @since     1.0.0
+ */
+#}
+
+{% import "_includes/forms" as forms %}
+
+{% do view.registerAssetBundle("importantcoding\\businesstobusiness\\assetbundles\\businesstobusiness\\BusinessToBusinessAsset") %}
+
+{{ forms.textField({
+    label: 'Some Attribute',
+    instructions: 'Enter some attribute here.',
+    id: 'someAttribute',
+    name: 'someAttribute',
+    value: field['someAttribute']})
+}}

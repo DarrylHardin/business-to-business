@@ -1,0 +1,165 @@
+{# @var craft \craft\web\twig\variables\CraftVariable #}
+{#
+/**
+ * Business To Business plugin for Craft CMS 3.x
+ *
+ * Business To Business index.twig
+ *
+ * @author    Darryl Hardin
+ * @copyright Copyright (c) 2019 Darryl Hardin
+ * @link      http://importantcoding.com
+ * @package   BusinessToBusiness
+ * @since     1.0.0
+ */
+#}
+
+{% extends 'business-to-business/_layouts' %}
+{% set selectedSubnavItem = 'orders' %}
+{% set all = true %}
+{% set businesses = craft.businessToBusiness.getBusinesses() %}
+{% set urlId = craft.app.request.getSegment(3) %}
+{% set sidebar %}
+    <nav>
+        <ul>
+            <li>
+
+                {% if currentUser.can('admin') %}
+                    {% if bus.id == null %}
+                        <a data-key="*" data-default-sort="postDate:desc" tabindex="0" class="sel"><span class="label">All orders</span></a>
+                    {% else %}
+                        <a href="{{ url('business-to-business/orders/index') }}" data-default-sort="postDate:desc" tabindex="0"><span class="label">All orders</span></a>
+                        {% set all = false %}
+                    {% endif %}
+                {% else %}
+                    {% set all = false %}
+                {% endif %}
+
+
+            </li>
+            <li class="heading"><span>Orders By Business</span></li>
+            {% if businesses | length %}
+
+                {% for business in businesses %}
+
+                    {% if currentUser.can('admin') and urlId == business.id %}  
+                        <li scope="row" data-title="{{ 'Name' | t('business-to-business') }}"><a class="sel" href="{{ url('business-to-business/orders/' ~ business.id) }}"><span class='label'>{{ business.name | t('business-to-business') }}</span></a></li>
+                    {% elseif currentUser.can('admin') %}
+                        <li scope="row" data-title="{{ 'Name' | t('business-to-business') }}"><a href="{{ url('business-to-business/orders/' ~ business.id) }}"><span class='label'>{{ business.name | t('business-to-business') }}</span></a>
+                    {% elseif currentUser.can('businessToBusiness-manageVouchers:' ~ business.id) %}
+                        {% if business.id != urlId %}
+                            {% redirect "business-to-business/orders/" ~ business.id %}
+                        {% endif %}
+                        {# {% if not currentUser.can('admin') %} #}
+                            {# {% if currentUser.can('businessToBusiness-manageBusiness: ~ bus.id') %} #}
+                                
+                            {# {% endif %} #}
+                        {# {% endif %} #}
+                        <li scope="row" data-title="{{ 'Name' | t('business-to-business') }}"><a class="sel" href="{{ url('business-to-business/orders/' ~ business.id) }}"><span class='label'>{{ business.name | t('business-to-business') }}</span></a></li>
+                    {% endif %}
+                    {# {% if currentUser.can('businessToBusiness-manageVouchers:' ~ business.id) %}
+
+                        {% if business.id != urlId %}
+                            {% redirect "business-to-business/orders/" ~ business.id %}
+                        {% endif %} #}
+                        {# {% if not currentUser.can('admin') %} #}
+                            {# {% if currentUser.can('businessToBusiness-manageBusiness: ~ bus.id') %} #}
+                                
+                            {# {% endif %} #}
+                        {# {% endif %} #}
+                        {# <li scope="row" data-title="{{ 'Name' | t('business-to-business') }}"><a class="sel" href="{{ url('business-to-business/orders/' ~ business.id) }}"><span class='label'>{{ business.name | t('business-to-business') }}</span></a></li>
+                    {% elseif currentUser.can('admin') %}  
+                        <li scope="row" data-title="{{ 'Name' | t('business-to-business') }}"><a href="{{ url('business-to-business/orders/' ~ business.id) }}"><span class='label'>{{ business.name | t('business-to-business') }}</span></a></li>
+                    {% endif %} #}
+                {% endfor %}
+            
+            {% endif %}
+        </ul>
+    </nav>
+{% endset %}
+{% set extraPageHeaderHtml %}
+    {% block actionButton %}
+    {# {% if pdfUrl %} #}
+    {% if bus.id != null %}
+        <a class="btn" href="{{siteUrl}}buyshoes/business-to-business/downloads/business/{{bus.id}}" target="_blank">{{ 'Download CSV'|t('commerce') }}</a>
+    {% endif %}
+        <div class="flex-grow"></div>
+    {# {% endif %} #}
+    {% endblock %}
+{% endset %}
+{% block content %}
+    {# <h2>{{ "voucher CP Section body goes here"|t('voucher') }}</h2>
+    <img src="{{ iconUrl }}" height="64" width="64" />
+    <p class="textline"></p> #}
+<style>
+    .flag{
+        background:red;
+        color:white;
+    }
+</style>
+{% set pastOrders = craft.orders()
+.orderStatusId([9,10])
+.all() %}
+{# {% set pastOrders = craft.businessToBusiness.getOrders(1) %} #}
+{# {{ tabss.this }} #}
+<table class="data fullwidth">
+<thead>
+    <tr>
+        <th>Date Ordered</th>
+        <th>User</th>
+        {# <th>Footwear Purchased w/Voucher</th> #}
+        <th>Business</th>
+        <th>Order Total</th>
+        <th>Payroll Deduct</th>
+        <th>Charged to Voucher</th>
+        <th>PDF</th>
+        <th>Order Status</th>
+    </tr>
+</thead>
+    {# setting up beam for CSV #}
+
+        {% set options = {
+        header: ['Date Orderd', 'Employee Id', 'First Name', 'Last Name', 'Order Total', 'Voucher Total', 'Payroll Deduct' ],
+        content: []
+        } %}
+        {% set beam = craft.beam.create(options) %}
+
+    {# end setup #}
+{% set voucherTotal = 0 %}
+{% for order in pastOrders %}
+    
+    {#  if order.businessId will sort out the results by the business Id  #}
+    {% if order.businessId == bus.id or all == true %}
+        {% set voucher = order.adjustmentsTotal|abs %}
+        {# {% if voucher == 0 %}
+            {% set flag = 'flag' %}
+        {% endif %} #}
+        {% set total = order.totalPrice + voucher %}
+        <tr class="">
+        <td><span title="{{ order.dateOrdered|date('r') }}">{{ order.dateOrdered|date('D jS M Y') }}</span></td>
+        {% set employee = craft.businessToBusiness.getCurrentEmployee(order.user.id) %}
+        <td><a target="_blank" href="http://footwearoutfitters.test/buyshoes/business-to-business/employees/{{order.businessHandle}}/{{employee.id}}">{{ employee.firstName }}</a></td>
+            {# <td>{% for item in order.lineItems %}{% if item.options['purchasedWithVoucher'] == 'yes' %} {{ item.description }} {% endif %}{% endfor %}</td> #}
+            <td>
+            {# {% for item in order.lineItems %} #}
+                    {{ order.businessName }} 
+                {# {% endfor %} #}
+                </td>
+        <td>{{ total|currency(order.currency)}}</td>
+            <td>{{ order.totalPrice|currency(order.currency) }}</td>
+            <td>{{ voucher|currency(order.currency) }}</td>
+            
+            {# Adds to business bill if an order has not been paid #}
+                {% set voucherTotal = voucherTotal + voucher %}
+            {% if order.pdfUrl %}
+                <td><strong>Receipt:</strong> <a href="{{ order.getPdfUrl('receipt') }}">Download</a></td>
+            {% endif %}
+            <td><span class="status {{ order.orderStatus.color }}"></span> {{ order.orderStatus }}</td>
+        </tr>
+    {# {% do beam.append([order.dateOrdered|date('D jS M Y'), employee.title, employee.firstName, employee.lastName, total|currency(order.currency), voucher|currency(order.currency), order.totalPrice|currency(order.currency)]) %} #}
+    {% endif %}
+
+{% endfor %}	
+{# {% do beam.csv() %} #}
+<h3>Business Total: {{ voucherTotal|currency('USD') }}</h3>
+
+{% endblock %}

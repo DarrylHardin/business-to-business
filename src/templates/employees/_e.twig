@@ -1,0 +1,179 @@
+{% extends '_layouts/cp' %}
+{% set selectedSubnavItem = 'vouchers' %}
+
+{% set crumbs = [
+	{ label: 'Business To Business' | t('business-to-business'), url: url('business-to-business') },
+	{ label: business.name | t('business-to-business'), url: url('business-to-business/vouchers/' ~ business.handle) },
+] %}
+
+{% set fullPageForm = true %}
+{% set saveShortcutRedirect = continueEditingUrl %}
+
+{% import '_includes/forms' as forms %}
+{% import 'business-to-business/vouchers/_fields' as voucherFields %}
+
+{% block header %}
+    {{ block('pageTitle') }}
+    {{ block('contextMenu') }}
+    <div class="flex-grow"></div>
+
+    {% if showPreviewBtn or shareUrl is defined %}
+        {% if showPreviewBtn %}
+            <div class="btn livepreviewbtn">{{ 'Live Preview' | t('app') }}</div>
+        {% endif %}
+
+        {% if shareUrl is defined %}
+            <a href="{{ shareUrl }}" class="btn sharebtn" target="_blank">{{ 'Share' | t('app') }}</a>
+        {% endif %}
+
+        <div class="flex-grow"></div>
+    {% endif %}
+
+    {{ block('actionButton') }}
+{% endblock %}
+
+{% block actionButton %}
+    <div class="btngroup">
+        <input type="submit" class="btn submit" value="{{ 'Save' | t('business-to-business') }}">
+        <div class="btn submit menubtn"></div>
+        <div class="menu">
+            <ul>
+                <li>
+                    <a class="formsubmit" data-redirect="{{ continueEditingUrl | hash }}">
+                        {{ 'Save and continue editing' | t('business-to-business') }}
+                        {{ forms.optionShortcutLabel('S') }}
+                    </a>
+                </li>
+
+                {% if voucher.id %}
+                    <li>
+                        <a class="formsubmit" data-param="voucherId" data-value="" data-redirect="{{ continueEditingUrl | hash }}">
+                            {{ 'Save as a new voucher' | t('business-to-business') }}
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+
+            {% if voucher.id %}
+                <hr>
+                <ul>
+                    <li>
+                        <a class="formsubmit error" data-action="business-to-business/vouchers/delete" data-confirm="{{ 'Are you sure you want to delete this voucher?' | t('business-to-business') }}" data-redirect="{{ 'business-to-business/vouchers' | hash }}">
+                            {{ 'Delete' | t('business-to-business') }}
+                        </a>
+                    </li>
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block contextMenu %}
+    {% if craft.app.getIsMultiSite() %}
+        <div class="btn menubtn" data-icon="world">{{ voucher.site.name | t('site') }}</div>
+        <div class="menu">
+            <ul class="padded">
+                {% for siteId in siteIds %}
+                    {% set site = craft.app.sites.getSiteById(siteId) %}
+                    {% set status = siteId in enabledSiteIds ? 'enabled' : 'disabled' %}
+
+                    <li>
+                        {% if siteId == voucher.siteId %}
+                            <a class="sel">
+                                <div class="status {{ status }}"></div>{{ site.name | t('site') }}
+                            </a>
+                        {% else %}
+                            {% set url = url('business-to-business/vouchers/#{businessHandle}/#{craft.app.request.getSegment(4)}/#{site.handle}') %}
+
+                            <a href="{{ url }}">
+                                <div class="status {{ status }}"></div>{{ site.name | t('site') }}
+                            </a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+	<input type="hidden" name="action" value="business-to-business/vouchers/save">
+	{{ redirectInput('business-to-business/vouchers') }}
+	<input type="hidden" name="businessId" value="{{ business.id }}">
+	{% if voucher.id %}<input type="hidden" name="voucherId" value="{{ voucher.id }}">{% endif %}
+
+	<div id="fields">
+        {{ voucherFields.titleField(voucher) }}
+
+        <div>
+            {% set allVoucherTab = business.getFieldLayout().getTabs() %}
+
+            {% for tab in business.getFieldLayout().getTabs() %}
+                <div id="{{ tab.getHtmlId() }}" {% if not loop.first %} class="hidden" {% endif %}>
+                    {% include '_includes/fields' with {
+                        fields: tab.getFields(),
+                        element: voucher,
+                    } only %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if not voucher.slug %}
+        {% js %}
+            window.slugGenerator = new Craft.SlugGenerator('#title', '#slug');
+        {% endjs %}
+    {% endif %}
+{% endblock %}
+
+{% block details %}
+    <div class="meta">
+        {{ voucherFields.generalMetaFields(voucher) }}
+
+        {{ forms.lightswitchField({
+            label: 'Enabled' | t('business-to-business'),
+            id: 'enabled',
+            name: 'enabled',
+            on: voucher.enabled
+        }) }}
+
+        {% if craft.app.getIsMultiSite() %}
+            {{ forms.lightswitchField({
+                label: 'Enabled for site' | t('business-to-business'),
+                id: 'enabledForSite',
+                name: 'enabledForSite',
+                on: voucher.enabledForSite
+            }) }}
+        {% endif %}
+    </div>
+
+    <hr>
+
+    <div class="meta">
+        {{ voucherFields.behavioralMetaFields(voucher) }}
+    </div>
+
+    <hr>
+
+    <div class="meta">
+        {{ voucherFields.generalFields(voucher) }}
+    </div>
+
+    <hr>
+
+    {% if voucher.id %}
+        <hr>
+
+        <div class="meta read-only">
+            <div class="data">
+                <h5 class="heading">{{ 'Date Created' | t('business-to-business') }}</h5>
+                <div class="value">{{ voucher.dateCreated | date('short') }} {{ voucher.dateCreated | time('short') }}</div>
+            </div>
+
+            <div class="data">
+                <h5 class="heading">{{ 'Date Updated' | t('business-to-business') }}</h5>
+                <div class="value">{{ voucher.dateUpdated | date('short') }} {{ voucher.dateUpdated | time('short') }}</div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

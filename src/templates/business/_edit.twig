@@ -1,0 +1,418 @@
+{% extends 'business-to-business/_layouts' %}
+
+
+{% set crumbs = [
+    { label: 'Business To Business' | t('business-to-business'), url: url('business-to-business') },
+    { label: 'Business' | t('business-to-business'), url: url('business-to-business/business') },
+] %}
+
+{% set fullPageForm = true %}
+
+{% set selectedTab = 'business-settings' %}
+{% from "_includes/forms" import checkbox %}
+{% import '_includes/forms' as forms %}
+{# {% includeCssFile "http://footwearoutfitters.test/cpresources/faeba7bb/user-permissions.css?v=1581628561" %} #}
+{% do view.registerAssetBundle("craft\\web\\assets\\userpermissions\\UserPermissionsAsset") %}
+{% set tabs = {
+        0: {'label':'Business'|t('business-to-business'),'url':'#business-tab'},
+        1: {'label':'Checkout Rules'|t('business-to-business'),'url':'#checkout-tab'},
+        2: {'label':'Layoutfields'|t('business-to-business'),'url':'#layout-tab'}
+    } %}
+{% block blockContent %}
+<div id="business-tab">
+    <h2>{{ "General Information" |t('business-to-business') }}</h2>
+	<input type="hidden" name="action" value="business-to-business/business/save">
+	{{ redirectInput('business-to-business/business') }}
+	{% if business.id %}<input type="hidden" name="businessId" value="{{ business.id }}">{% endif %}
+	{{ forms.textField({
+		id: true,
+		label: 'Name' | t('business-to-business'),
+		instructions: 'What this Business will be called in the CP.' | t('business-to-business'),
+		id: 'name',
+		name: 'name',
+		value: business.name,
+		errors: business.getErrors('name'),
+		autofocus: true,
+		required: true,
+		translatable: true
+	}) }}
+
+	{{ forms.textField({
+		label: 'Handle' | t('business-to-business'),
+		instructions: 'How you’ll refer to this business type in the templates.' | t('business-to-business'),
+		id: 'handle',
+		class: 'handle',
+		name: 'handle',
+		value: business.handle,
+		errors: business.getErrors('handle'),
+		required: true
+	}) }}
+    <hr>
+    <h2>{{ "Security"|t('business-to-business') }}</h2>
+    {{ forms.textField({
+		label: 'Passcode' | t('business-to-business'),
+		instructions: 'Give this passcode to your employees, they will need it to sign up under your company' | t('business-to-business'),
+		id: 'passcode',
+		name: 'passcode',
+		value: business.passcode,
+		errors: business.getErrors('passcode'),
+        required: true
+	}) }}
+
+    {{ forms.lightswitchField({
+        label: 'Automatically Verify' | t('business-to-business'),
+		instructions: 'Switch on if you want employees to automatically be verified. (Their product will be shipped after purchase without additional verification.)' | t('business-to-business'),
+        id: 'autoVerify',
+        name: 'autoVerify',
+        on: business.autoVerify
+    }) }}
+<hr>
+    <h2>{{ "Product Information" |t('business-to-business') }}</h2>
+
+    {{ forms.lightswitchField({
+        label: 'Tax Exempt?' | t('business-to-business'),
+        id: 'taxExempt',
+        name: 'taxExempt',
+        on: business.taxExempt
+    }) }}
+
+    {% set discountRange = [] %}
+        
+        {% for discount in range(0, 100) %}
+                {% set discountRange = discountRange|merge([
+                    {label: discount ~ '%', value: discount}
+                ]) %}
+        {% endfor %}
+
+    {{ forms.selectField({
+        label: 'Discount' | t('business-to-business'),
+        name: 'discount',
+        value: business.discount,
+        options: discountRange,
+        errors: business.getErrors('discount'),
+        required: true,
+    }) }}
+
+<hr>
+    <h2>{{ "Permissions"|t('business-to-business') }}</h2>
+
+    {{ forms.elementSelectField({
+        label: "Business User Account"|t('business-to-business'),
+        instructions: "Select the user account that will manage this business account and be assigned invoices. If the Business Account User is ever changed the current account will lose all it's permissions and the new one will keep any current permissions and gain permissions you allow here.",
+        id: 'manager',
+        name: 'manager',
+        elementType: userElementType,
+        selectionLabel: "Choose"|t('business-to-business'),
+        limit: 1,
+        elements: (manager is defined and manager ? [manager]),
+        required: true
+    }) }}
+    
+    <div class="user-permissions">
+    <h3>{{ "Business To Business Permissions" |t('business-to-business') }}</h3><div class="select-all">Select All</div>
+    <ul>
+        <li>
+            {{ checkbox({
+                label: 'Manage Business' | t('business-to-business'),
+                name: 'manageBusiness',
+                info: 'This permission will give the Business Account User (the one set above) CP access that is limited to this plugin and any site (below) that does not have a blank URL. It is highly recommended you allow the business access to the CP',
+                checked: hasPermission.manageBusiness,
+                value: 1
+            }) }}
+            <ul id="businessToBusiness-0-nested">
+                <li>
+                    {{ checkbox({
+                        label: 'Create/Edit vouchers' | t('business-to-business'),
+                        name: 'manageVouchers',
+                        checked: hasPermission.manageVouchers,
+                        reverseToggle: 'businessToBusiness',
+                        value: 1
+                    }) }}
+                </li>
+                <li>
+                    {{ checkbox({
+                        label: 'Delete vouchers' | t('business-to-business'),
+                        name: 'deleteVouchers',
+                        checked: hasPermission.deleteVouchers,
+                        value: 1
+                    }) }}
+                </li>
+                <li>
+                    {{ checkbox({
+                        label: 'Manage Employees' | t('business-to-business'),
+                        name: 'manageEmployees',
+                        checked: hasPermission.manageEmployees,
+                        value: 1
+                    }) }}
+                </li>
+                <li>
+                    {{ checkbox({
+                        label: 'Delete Employees' | t('business-to-business'),
+                        name: 'deleteEmployees',
+                        checked: hasPermission.deleteEmployees,
+                        value: 1
+                    }) }}
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+	{% macro hasUrlsField(business) %}
+		{% from '_includes/forms' import checkboxField %}
+
+		{{ checkboxField({
+			label: 'Vouchers from this business have their own URLs' | t('business-to-business'),
+			id: 'hasUrls',
+			name: 'hasUrls',
+			checked: business.hasUrls,
+			toggle: 'url-settings'
+		}) }}
+	{% endmacro %}
+
+	{% macro templateField(business) %}
+		{% from "_includes/forms" import textField %}
+
+		{{ textField({
+			label: 'Business Template' | t('business-to-business'),
+			instructions: 'The template to use when a business’s URL is requested.' | t('business-to-business'),
+			id: 'template',
+			class: 'ltr',
+			name: 'template',
+			value: business.template,
+			errors: business.getErrors('template')
+		}) }}
+	{% endmacro %}
+
+	{% from _self import hasUrlsField, templateField %}
+
+    <hr>
+
+    {% set siteRows = [] %}
+    {% set siteErrors = business.getErrors('siteSettings') %}
+
+    {% for site in craft.app.sites.getAllSites() %}
+        {% set siteSettings = business.siteSettings[site.id] ?? null %}
+        
+        {% if siteSettings %}
+            {% for attribute, errors in siteSettings.getErrors() %}
+                {% set siteErrors = siteErrors | merge(errors) %}
+            {% endfor %}
+        {% endif %}
+
+        {% set siteRows = siteRows | merge({
+            (site.handle): {
+                heading: site.name | t('site'),
+                uriFormat: {
+                    value: siteSettings.uriFormat ?? null,
+                    hasErrors: siteSettings.hasErrors('uriFormat') ?? false
+                },
+                template: {
+                    value: siteSettings.template ?? 'products/_business',
+                    hasErrors: siteSettings.hasErrors('template') ?? false,
+                }
+            }
+        }) %}
+    {% endfor %}
+
+    {{ forms.editableTableField({
+        label: 'Site Settings' | t('app'),
+        instructions: 'Configure the business site-specific settings. If you have given the Business User Account "Manage Business" permissions they will automatically get permission for sites without blank URLs' | t('app'),
+        id: 'sites',
+        name: 'sites',
+        cols: {
+            heading: {
+                type: 'heading',
+                heading: 'Site' | t('app'),
+                class: 'thin'
+            },
+            uriFormat: {
+                type: 'singleline',
+                heading: 'Business URI Format' | t('app'),
+                info: 'What business URIs should look like for the site.' | t('app'),
+                placeholder: 'Leave blank if business does not have URLs' | t('app'),
+                code: true
+            },
+            template: {
+                type: 'singleline',
+                heading: 'Template' | t('app'),
+                info: 'Which template should be loaded when an business’ URL is requested.' | t('app'),
+                code: true
+            },
+        },
+        rows: siteRows,
+        staticRows: true,
+        errors: siteErrors | unique
+    }) }}
+    </div>
+    <div id="checkout-tab" class="hidden">
+    {% import '_includes/forms' as forms %}
+        {% if shippingRules is defined %}
+            <h2>{{ "Shipping Rules" |t('business-to-business') }}</h2>
+            
+            {% if vouchersExist %}
+                {{ forms.lightswitchField({
+                    label: 'Make Shipping Rules changes apply to existing vouchers?' | t('business-to-business'),
+                    instructions: 'Toggle on if you want these changes to apply to existing vouchers, future vouchers will receive these values as default.' | t('business-to-business'),
+                    id: 'overwriteShippingRules',
+                    name: 'overwriteShippingRules',
+                    on: false
+                }) }}
+            {% endif %}
+
+            <table id="shipping-categories-conditions"
+                   class="data fullwidth collapsible">
+                <thead>
+                <tr>
+                    <th scope="col">{{ 'Shipping Method'|t('business-to-business') }}</th>
+                    <th scope="col">{{ 'Condition'|t('business-to-business') }} <span class='info'>Setting any value below to "Require" will result in employee having no other Shipping Method options.<p style="color:red">Note: "Apply Cost to Voucher" allows the Gateway to be used and charges the business for shipping charges incurred.</p></span></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for shippingRule in shippingRules %}
+                
+                    {% set id = shippingRule.id %}
+                    <tr{% if id %} data-id="{{ id }}" data-name="{{ shippingRule.name }}"{% endif %}>
+                        <th scope="row" data-title="{{ 'Name'|t('business-to-business') }}">
+                            {{ shippingRule.name }}
+                        </th>
+                        <td data-title="{{ 'Condition'|t('business-to-business') }}">
+                            {{ forms.selectField({
+                                name: 'shippingRulesBusiness['~shippingRule.shippingMethodId~'][condition]',
+                                value: shippingRule.condition ?? 'allow',
+                                options: ShippingRulesOptions
+                            }) }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <hr>
+            <h2>{{ "Gateway Rules"|t('business-to-business') }}</h2>
+
+            {% if vouchersExist %}
+                {{ forms.lightswitchField({
+                    label: 'Make Gateway Rule changes apply to existing vouchers?' | t('business-to-business'),
+                    instructions: 'Toggle on if you want these changes to apply to existing vouchers, future vouchers will receive these values as default.' | t('business-to-business'),
+                    id: 'overwriteOrderStatus',
+                    name: 'overwriteOrderStatus',
+                    on: false
+                }) }}
+            {% endif %}
+            <table id="shipping-categories-conditions"
+                   class="data fullwidth collapsible">
+                <thead>
+                <tr>
+                    <th scope="col">{{ 'Gateway'|t('business-to-business') }}</th>
+                    <th scope="col">{{ 'Condition'|t('business-to-business') }} <span class='info'>Setting any value below to "Require" will result in employee having no other Gateway options.</span></th>
+                    <th scope="col">{{ 'Default OrderStatus'|t('business-to-business') }} <span class='info'>Override Default OrderStatus based on Business and Gateway.</span></th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for gatewayRule in gatewayRules %}
+                
+                    {% set id = gatewayRule.id %}
+                    <tr{% if id %} data-id="{{ id }}" data-name="{{ gatewayRule.name }}"{% endif %}>
+                        <th scope="row" data-title="{{ 'Name'|t('business-to-business') }}">
+                            {{ gatewayRule.name }}
+                        </th>
+                        <td data-title="{{ 'Condition'|t('business-to-business') }}">
+                            {{ forms.selectField({
+                                name: 'gatewayRulesBusiness['~gatewayRule.gatewayId~'][condition]',
+                                value: gatewayRule.condition ?? 'allow',
+                                options: GatewayRulesOptions
+                            }) }}
+                        </td>
+                        <td data-title="{{ 'Gateway'|t('business-to-business') }}">
+                            {{ forms.selectField({
+                                name: 'gatewayRulesBusiness['~gatewayRule.gatewayId~'][orderStatusId]',
+                                value: gatewayRule.orderStatusId ?? defaultOrderStatus,
+                                options: orderStatusOptions
+                            }) }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <h2>Return to this tab after you have created this business</h2>
+        {% endif %}
+
+        {# {% set shippingMethods = craft.commerce.shippingMethods.allshippingMethods %}
+        {% if shippingMethods %}
+            <table id="shipping-categories-conditions"
+                   class="data fullwidth collapsible">
+                <thead>
+                <tr>
+                    <th scope="col">{{ 'Name'|t('commerce') }}</th>
+                    <th scope="col">{{ 'Condition'|t('commerce') }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for shippingMethod in shippingMethods %}
+                    {% set id = shippingMethod.id %}
+                    <tr{% if id %} data-id="{{ id }}" data-name="{{ shippingMethod.name }}"{% endif %}>
+                        <th scope="row" data-title="{{ 'Name'|t('commerce') }}">
+                            {{ shippingMethod.name }}
+                        </th>
+                        <td data-title="{{ 'Condition'|t('commerce') }}">
+                            {{ forms.selectField({
+                                name: 'shippingRulesBusinesses['~shippingMethod.id~'][condition]',
+                                value: shippingRule.getShippingRuleCategories[shippingMethod.id].condition ?? 'allow',
+                                options: ShippingRulesOptions
+                            }) }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %} #}
+    </div>
+    <div id="layout-tab" class="hidden">
+        {% include '_includes/fieldlayoutdesigner' with {
+            fieldLayout: business.getVoucherFieldLayout(),
+        } only %}
+    </div>
+
+{% endblock %}
+
+{% if brandNewBusiness %}
+   
+    {% js %}
+        new Craft.HandleGenerator('#name', '#handle');
+
+        {% for site in craft.app.sites.getAllSites() %}
+            new Craft.UriFormatGenerator('#name', '#sites tr[data-id="{{ site.handle }}"] textarea[name$="[uriFormat]"]', { suffix: '/{slug}' });
+            // new Craft.UriFormatGenerator('#name', '#sites tr[data-id="{{ site.handle }}"] textarea[name$="[template]"]', { suffix: '/_business' });
+        {% endfor %}
+
+    {% endjs %}
+
+{% endif %}
+    {# {% js %}
+
+    $( document ).ready(function() {
+        var shippingMethods = document.getElementById('limitShippingMethods');
+        if($("#shippingMethods").val(1))
+        {
+            $( '#hideShippingMethods' ).removeClass("hidden");
+            $( '#shippingMethods' ).prop("disabled", false);
+        }
+    });
+
+
+    $("#limitShippingMethods").change(function() {
+        var shippingMethods = document.getElementById('shippingMethods');
+        $( '#hideShippingMethods' ).toggleClass("hidden");
+        if(shippingMethods.disabled)
+        {
+            $( '#shippingMethods' ).prop("disabled", false);
+        } else {
+            $( '#shippingMethods' ).prop("disabled", true);
+        }
+        
+    });
+
+    {% endjs %} #}
+
+

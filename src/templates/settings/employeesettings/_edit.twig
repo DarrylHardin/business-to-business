@@ -1,0 +1,34 @@
+{% extends "business-to-business/_layouts/settings" %}
+
+{% set selectedSubnavItem = 'settings' %}
+
+{% set crumbs = [
+    { label: 'Business To Business' | t('business-to-business'), url: url('business-to-business/settings') },
+    { label: 'Employee Settings' | t('business-to-business'), url: url('business-to-business/settings/employee-settings') },
+] %}
+
+{% set fullPageForm = true %}
+
+{% set selectedTab = 'employee-settings' %}
+{% import '_includes/forms' as forms %}
+
+{% block content %}
+{% from _self import templateField %}
+{{ fieldLayout.id }}
+        <input type="hidden" name="action" value="business-to-business/employee-settings/save">
+	    {% include "_includes/fieldlayoutdesigner" with {
+        fieldLayout: craft.app.fields.getLayoutByType('importantcoding\\businesstobusiness\\elements\\Employee')
+        } only %}
+{% endblock %}
+
+{# {% if brandNewBusiness %}
+    {% js %}
+        new Craft.HandleGenerator('#name', '#handle');
+
+        {% for site in craft.app.sites.getAllSites() %}
+            new Craft.UriFormatGenerator('#name', '#sites tr[data-id="{{ site.handle }}"] textarea[name$="[uriFormat]"]', { suffix: '/{slug}' });
+            // new Craft.UriFormatGenerator('#name', '#sites tr[data-id="{{ site.handle }}"] textarea[name$="[template]"]', { suffix: '/_business' });
+        {% endfor %}
+
+    {% endjs %}
+{% endif %} #}

@@ -1,0 +1,41 @@
+{% extends parentLayout ?? '_layouts/cp' %}
+{% set selectedSubnavItem = 'settings' %}
+{# {% set bodyClass = (bodyClass is defined ? bodyClass~' ' : '') ~ "businesstobusinesssettings" %} #}
+
+{% set title = "Business To Business Settings"|t('business-to-business') %}
+
+{% set navItems = {} %}
+
+{% if currentUser.admin %}
+{% set navItems = {
+    'default': { title: "Default Settings"|t('business-to-business'), minEdition: 'lite' },
+    'businesses-heading': { heading: "Businesses"|t('business-to-business'), minEdition: 'lite' },
+    'business-settings': { title: "Employee Fields"|t('business-to-business'), minEdition: 'lite' },
+    'employees-heading': { heading: "Employees"|t('business-to-business'), minEdition: 'lite' },
+    'employee-settings': { title: "Employee Fields"|t('business-to-business'), minEdition: 'lite' },
+    'employee-statuses': { title: "Employee Statuses"|t('business-to-business'), minEdition: 'lite' },
+    'emails': { title: "Emails"|t('business-to-business'), minEdition: 'lite' },
+} %}
+{% endif %}
+
+{% if selectedItem is not defined %}
+    {% set selectedItem = craft.app.request.getSegment(3) %}
+{% endif %}
+
+{% set docTitle = navItems[selectedItem].title~' - '~title %}
+
+{% block sidebar %}
+    <nav>
+        <ul>
+            {% for handle, item in navItems if craft.commerce.is(item.minEdition, '>=') %}
+                {% if item.heading is defined %}
+                    <li class="heading"><span>{{ item.heading }}</span></li>
+                {% else %}
+                    <li>
+                        <a href="{{ url('business-to-business/settings/'~handle) }}"{% if handle == selectedItem %} class="sel"{% endif %}>{{ item.title }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+{% endblock %}

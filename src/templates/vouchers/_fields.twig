@@ -1,0 +1,118 @@
+
+
+{% macro generalMetaFields(voucher) %}
+    {%- import '_includes/forms' as forms -%}
+
+    {{ forms.dateTimeField({
+        label: 'Post Date' | t('business-to-business'),
+        id: 'postDate',
+        name: 'postDate',
+        value: voucher.postDate,
+        errors: voucher.getErrors('postDate')
+    }) }}
+
+    {{ forms.dateTimeField({
+        label: 'Expiry Date' | t('business-to-business'),
+        id: 'expiryDate',
+        name: 'expiryDate',
+        value: voucher.expiryDate,
+        errors: voucher.getErrors('expiryDate')
+    }) }}
+{% endmacro %}
+
+{% macro behavioralMetaFields(voucher) %}
+    {%- import '_includes/forms' as forms -%}
+
+
+    {{ forms.textField({
+        id: 'code',
+        label: 'Require Code? <span class="info">Insert any string of letters/numbers combo. Your employees will have to enter this code to connect their accounts to this voucher.</span>' | t('business-to-business'),
+        name: 'code',
+        value: voucher.code,
+        placeholder: 'Enter code' | t('business-to-business'),
+        errors: voucher.getErrors('code')
+    }) }}
+
+    {{ forms.textField({
+        id: 'amount',
+        label: 'Value <span class="info">How much will the business cover for a product purchase?</span>' | t('business-to-business'),
+        name: 'amount',
+        value: voucher.amount,
+        errors: voucher.getErrors('amount')
+    }) }}
+
+    {{ forms.textField({
+        id: 'product-limit',
+        label: 'Product Limit <span class="info">Limit the amount of products available?</span>' | t('business-to-business'),
+        name: 'productLimit',
+        value: voucher.productLimit|default(1),
+        errors: voucher.getErrors('productLimit')
+    }) }}
+    {# {{ forms.selectField({
+        label: 'Tax Category' | t('business-to-business'),
+        name: 'taxCategoryId',
+        value: voucher.taxCategoryId,
+        required: true,
+        options: craft.commerce.taxCategories.getAllTaxCategoriesAsList()
+    }) }} #}
+
+    {# {% set shippingCategories = [] %}
+    {% for shippingCategory in craft.commerce.shippingCategories.getAllShippingCategories() %}
+        {% set shippingCategories = shippingCategories|merge([{ value: shippingCategory.id, label: shippingCategory.name }]) %}
+    {% endfor %}
+
+    {{ forms.selectField({
+        label: 'Shipping Category' | t('business-to-business'),
+        name: 'shippingCategoryId',
+        value: voucher.shippingCategoryId,
+        required: true,
+        options: shippingCategories
+    }) }} #}
+{% endmacro %}
+
+{% macro generalFields(voucher) %}
+    {%- import '_includes/forms' as forms -%}
+
+    {# {{ forms.textField({
+        id: 'sku',
+        label: 'SKU' | t('business-to-business'),
+        required: true,
+        name: 'sku',
+        value: voucher.sku,
+        placeholder: 'Enter SKU' | t('business-to-business'),
+        errors: voucher.getErrors('sku')
+    }) }}
+
+    {# {{ forms.lightswitchField({
+        id: 'customAmount',
+        name: 'customAmount',
+        on: voucher.customAmount,
+        label: 'Custom amount? <span class="info">Allow customers to set their own amount when purchasing this voucher.</span>' | t('business-to-business')
+    }) }}
+
+    {{ forms.textField({
+        id: 'amount',
+        label: 'Amount' | t('business-to-business'),
+        name: 'amount',
+        value: (voucher.amount == '0' ? '0' | number : (voucher.amount ?  voucher.amount | number ?: '')),
+        placeholder: 'Enter amount' | t('business-to-business'),
+        unit: craft.commerce.paymentCurrencies.primaryPaymentCurrency.iso | upper,
+        errors: voucher.getErrors('amount'),
+        fieldClass: voucher.amount ? 'hidden'
+    }) }} #}
+
+    {# {% js %}
+        $(function() {
+            $(document).on('change', '#customAmount', function() {
+                var $priceField = $('#price-field');
+
+                if ($(this).hasClass('on')) {
+                    $priceField.addClass('hidden');
+                } else {
+                    $priceField.removeClass('hidden');
+                }
+            });
+        });
+    {% endjs %} #}
+{% endmacro %}
+

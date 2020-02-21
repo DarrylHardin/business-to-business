@@ -1,0 +1,47 @@
+{
+    "name": "importantcoding/business-to-business",
+    "description": "Allow businesses to create vouchers for employees that allows the purchasing of products to be charged to the company at a later date.",
+    "type": "craft-plugin",
+    "version": "0.0.1-alpha",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "business to business"
+    ],
+    "support": {
+        "docs": "https://github.com/importantcoding/business-to-business/blob/master/README.md",
+        "issues": "https://github.com/importantcoding/business-to-business/issues"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Darryl Hardin",
+            "homepage": "http://importantcoding.com"
+        }
+    ],
+    "require": {
+        "craftcms/cms": "^3.0.0-RC1"
+    },
+    "autoload": {
+        "psr-4": {
+          "importantcoding\\businesstobusiness\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Business To Business",
+        "handle": "business-to-business",
+        "hasCpSettings": true,
+        "hasCpSection": true,
+        "changelogUrl": "https://raw.githubusercontent.com/importantcoding/business-to-business/master/CHANGELOG.md",
+        "components": {
+            "employee": "importantcoding\\businesstobusiness\\services\\Employee",
+            "business": "importantcoding\\businesstobusiness\\services\\Business",
+            "voucher": "importantcoding\\businesstobusiness\\services\\Voucher",
+            "shippingRulesBusinesses": "importantcoding\\businesstobusiness\\services\\ShippingRulesBusinesses",
+            "gatewayRulesBusinesses": "importantcoding\\businesstobusiness\\services\\GatewayRulesBusinesses"
+        },
+        "class": "importantcoding\\businesstobusiness\\BusinessToBusiness"
+    }
+}

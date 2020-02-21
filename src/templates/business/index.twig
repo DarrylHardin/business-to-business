@@ -1,0 +1,57 @@
+{# @var craft \craft\web\twig\variables\CraftVariable #}
+{#
+/**
+ * Business To Business plugin for Craft CMS 3.x
+ *
+ * Business To Business index.twig
+ *
+ * @author    Darryl Hardin
+ * @copyright Copyright (c) 2019 Darryl Hardin
+ * @link      http://importantcoding.com
+ * @package   BusinessToBusiness
+ * @since     1.0.0
+ */
+#}
+
+{% extends 'business-to-business/_layouts' %}
+{% set selectedSubnavItem = 'business' %}
+
+{% set businesses = craft.businessToBusiness.getBusinesses() %}
+{% block blockContent %}
+	<div id="noBusinesses"{% if businesses %} class="hidden"{% endif %}>
+		<p>{{ 'No Businesses exist yet.' | t('business-to-business') }}</p>
+	</div>
+
+	{% if businesses | length %}
+		<table id="businesses" class="data fullwidth collapsible">
+			<thead>
+    			<th scope="col">{{ 'Name' | t('business-to-business') }}</th>
+    			<th scope="col">{{ 'Handle' | t('business-to-business') }}</th>
+    			<td class="thin"></td>
+			</thead>
+			<tbody>
+    			{% for business in businesses %}
+    				<tr data-id="{{ business.id }}" data-name="{{ business.name | t('business-to-business') }}">
+    					<th scope="row" data-title="{{ 'Name' | t('business-to-business') }}"><a href="{{ url('business-to-business/business/' ~ business.id) }}">{{ business.name | t('business-to-business') }}</a></th>
+    					<td data-title="{{ 'Handle' | t('business-to-business') }}"><code>{{ business.handle }}</code></td>
+    					<td class="thin"><a class="delete icon" title="{{ 'Delete' | t('business-to-business') }}" role="button"></a></td>
+    				</tr>
+    			{% endfor %}
+			</tbody>
+		</table>
+	{% endif %}
+
+    <div id="business" class="buttons">
+        <a href="{{ url('business-to-business/business/new') }}" class="btn submit add icon">{{ 'New Business' | t('business-to-business') }}</a>
+    </div>
+{% endblock %}
+
+{% js %}
+	var adminTable = new Craft.AdminTable({
+		tableSelector: '#businesses',
+		noObjectsSelector: '#noBusinesses',
+		newObjectBtnSelector: '#business',
+		deleteAction: 'business-to-business/business/delete',
+		confirmDeleteMessage: '{{ 'Are you sure you want to delete “{name}” and all its vouchers?' | t('business-to-business') }}'
+	});
+{% endjs %}
