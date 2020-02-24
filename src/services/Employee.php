@@ -33,6 +33,8 @@ use yii\base\Exception;
  */
 class Employee extends Component
 {
+    // const CONFIG_USERLAYOUT_KEY = 'users.fieldLayouts';
+    const CONFIG_FIELDLAYOUT_KEY = 'employees.fieldLayouts';
     // Public Methods
     // =========================================================================
 

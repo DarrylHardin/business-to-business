@@ -3,7 +3,6 @@
  * @link      http://importantcoding.com
  * @copyright Copyright (c) 2019 Darryl Hardin
  */
- */
 
 namespace importantcoding\businesstobusiness\elements\actions;
 

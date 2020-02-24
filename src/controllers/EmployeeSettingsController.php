@@ -43,10 +43,10 @@ class EmployeeSettingsController extends Controller
         $this->requirePostRequest();
 
         $fieldLayout = Craft::$app->getFields()->assembleLayoutFromPost();
-        $configData = [StringHelper::UUID() => $fieldLayout->getConfig()];
-
-        Craft::$app->getProjectConfig()->set(EmployeeServices::CONFIG_FIELDLAYOUT_KEY, $configData);
-
+        // $configData = [StringHelper::UUID() => $fieldLayout->getConfig()];
+        $fieldLayout->type = 'importantcoding\businesstobusiness\elements\Employee';
+        // Craft::$app->getProjectConfig()->set(EmployeeServices::CONFIG_FIELDLAYOUT_KEY, $configData);
+        \Craft::$app->getFields()->saveLayout($fieldLayout);
         Craft::$app->getSession()->setNotice(Craft::t('app', 'Employee fields saved.'));
         return $this->redirectToPostedUrl();
 

@@ -118,7 +118,7 @@ class BusinessToBusiness extends Plugin
             UrlManager::class,
             UrlManager::EVENT_REGISTER_SITE_URL_RULES,
             function (RegisterUrlRulesEvent $event) {
-                $event->rules['employee'] = 'business-to-business/employee-site/index';
+                // $event->rules['employee'] = 'business-to-business/employee/index';
                 // $event->rules['employee/<businessHandle:{handle}>/<voucherHandle:{handle}>'] = 'business-to-business/employee-site/voucher';
                 $event->rules['siteActionTrigger2'] = 'business-to-business/business';
                 $event->rules['siteActionTrigger3'] = 'business-to-business/voucher';
@@ -136,6 +136,7 @@ class BusinessToBusiness extends Plugin
 
                 $event->rules['business-to-business/settings/default'] = 'business-to-business/base/settings';
                 $event->rules['business-to-business/settings/employee-settings'] = 'business-to-business/employee-settings/edit';
+                $event->rules['business-to-business/settings/business-settings'] = 'business-to-business/business-settings/edit';
 
                 $event->rules['business-to-business/business/new'] = 'business-to-business/business/edit';
                 $event->rules['business-to-business/business/<businessId:\d+>'] = 'business-to-business/business/edit';

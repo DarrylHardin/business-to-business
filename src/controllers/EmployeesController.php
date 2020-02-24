@@ -119,6 +119,26 @@ class EmployeesController extends Controller
         return $this->renderTemplate('business-to-business/employees/_edit', $variables);
     }
 
+    public function actionSaveFieldLayout()
+    {
+        $this->requirePostRequest();
+        $this->requireAdmin();
+
+        // Set the field layout
+        $fieldLayout = Craft::$app->getFields()->assembleLayoutFromPost();
+        $fieldLayout->type = Employee::class;
+
+        if (!Craft::$app->getUsers()->saveLayout($fieldLayout)) {
+            Craft::$app->getSession()->setError(Craft::t('app', 'Couldn’t save employee fields.'));
+
+            return null;
+        }
+
+        Craft::$app->getSession()->setNotice(Craft::t('app', 'User fields saved.'));
+
+        return $this->redirectToPostedUrl();
+    }
+
     public function actionDelete(int $employeeId = NULL)
     {
         if(!$employeeId)
