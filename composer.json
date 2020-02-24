@@ -40,7 +40,8 @@
             "business": "importantcoding\\businesstobusiness\\services\\Business",
             "voucher": "importantcoding\\businesstobusiness\\services\\Voucher",
             "shippingRulesBusinesses": "importantcoding\\businesstobusiness\\services\\ShippingRulesBusinesses",
-            "gatewayRulesBusinesses": "importantcoding\\businesstobusiness\\services\\GatewayRulesBusinesses"
+            "gatewayRulesBusinesses": "importantcoding\\businesstobusiness\\services\\GatewayRulesBusinesses",
+            "defaultRules": "importantcoding\\businesstobusiness\\services\\DefaultRules"
         },
         "class": "importantcoding\\businesstobusiness\\BusinessToBusiness"
     }

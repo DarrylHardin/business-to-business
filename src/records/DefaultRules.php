@@ -13,9 +13,7 @@ namespace importantcoding\businesstobusiness\records;
 use Craft;
 use craft\db\ActiveRecord;
 use craft\commerce\records\Gateway;
-
-
-
+use craft\commerce\records\ShippingMethod;
 use yii\db\ActiveQueryInterface;
 /**
  * DefaultRules Record
@@ -39,7 +37,7 @@ class DefaultRules extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%businesstobusiness_gatewayrules_business}}';
+        return '{{%businesstobusiness_defaultrules}}';
     }
 
     /**
@@ -47,22 +45,14 @@ class DefaultRules extends ActiveRecord
      */
     public function getGateways(): ActiveQueryInterface
     {
-        return $this->hasMany(Gateway::class, ['id' => 'gatewayId']);
+        return $this->hasOne(Gateway::class, ['id' => 'gatewayId']);
     }
 
     /**
      * @return ActiveQueryInterface
      */
-    public function getBusiness(): ActiveQueryInterface
+    public function getShippingMethods(): ActiveQueryInterface
     {
-        return $this->hasOne(Business::class, ['id' => 'businessId']);
-    }
-
-    /**
-     * @return ActiveQueryInterface
-     */
-    public function getVoucher(): ActiveQueryInterface
-    {
-        return $this->hasOne(Voucher::class, ['id' => 'voucherId']);
+        return $this->hasOne(ShippingMethod::class, ['id' => 'shippingMethodId']);
     }
 }

@@ -18,7 +18,8 @@ use importantcoding\businesstobusiness\models\Business as BusinessModel;
 use importantcoding\businesstobusiness\models\BusinessSites as BusinessSitesModel;
 use importantcoding\businesstobusiness\records\Business as BusinessRecord;
 use importantcoding\businesstobusiness\records\BusinessSites as BusinessSitesRecord;
-
+use importantcoding\businesstobusiness\models\DefaultRules as DefaultRulesModel;
+use importantcoding\businesstobusiness\records\DefaultRules as DefaultRulesRecord;
 use Craft;
 use craft\db\Query;
 use craft\events\SiteEvent;
@@ -455,6 +456,74 @@ class Business extends Component
                     ->execute();
             }
         }
+    }
+
+    public function checkExistingRule(array $rules)
+    {
+        $gatewayId = $rules['gatewayId'];
+        $shippingMethodId = $rules['shippingMethodId'];
+        return (new Query())
+            ->select([
+                'id',
+            ])
+            ->from(['{{%businesstobusiness_defaultrules}}'])
+            ->where(['gatewayId' => $gatewayId] OR ['shippingMethodId' => $shippingMethodId])
+            ->one();
+    }
+
+
+    public function saveDefaultRule(DefaultRulesModel $DefaultRule): bool
+    {
+        $DefaultRuleExists = null;
+        $isNewDefaultRule = !$DefaultRule->id;
+        // $rules = ['shippingMethodId' => $DefaultRule->shippingMethodId, 'gatewayId' => $DefaultRule->gatewayId];
+
+        if (!$isNewDefaultRule) {
+            $DefaultRuleRecord = DefaultRulesRecord::findOne($DefaultRule->id);
+
+            if (!$DefaultRuleRecord) {
+                throw new Exception("No DefaultRule exists with the ID '{$DefaultRule->id}'");
+            }
+
+        } elseif($DefaultRuleExists) {
+            $DefaultRuleRecord = DefaultRulesRecord::findOne($DefaultRuleExists['id']);
+        } else {
+            $DefaultRuleRecord = new DefaultRulesRecord();
+        }
+        
+        $DefaultRuleRecord->name = $DefaultRule->name;
+        $DefaultRuleRecord->shippingMethodId = $DefaultRule->shippingMethodId;
+        $DefaultRuleRecord->gatewayId = $DefaultRule->gatewayId;
+        $DefaultRuleRecord->orderStatusId = $DefaultRule->orderStatusId;
+        $DefaultRuleRecord->condition = $DefaultRule->condition;
+        
+
+        
+        $db = Craft::$app->getDb();
+        $transaction = $db->beginTransaction();
+
+        try {
+
+
+            // Save the voucher type
+            $DefaultRuleRecord->save(false);
+
+            // Now that we have a voucher type ID, save it on the model
+            if (!$DefaultRule->id) {
+                $DefaultRule->id = $DefaultRuleRecord->id;
+            }
+
+            // Might as well update our cache of the voucher type while we have it.
+            // $this->_DefaultRuleById[$DefaultRule->id] = $DefaultRule;
+
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+
+            throw $e;
+        }
+
+        return true;
     }
     
 

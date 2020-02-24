@@ -16,6 +16,7 @@ use importantcoding\businesstobusiness\services\Business as BusinessService;
 use importantcoding\businesstobusiness\services\Voucher as VoucherService;
 use importantcoding\businesstobusiness\services\ShippingRulesBusinesses as ShippingRulesBusinessesService;
 use importantcoding\businesstobusiness\services\GatewayRulesBusinesses as GatewayRulesBusinessesService;
+use importantcoding\businesstobusiness\services\DefaultRules as DefaultRulesService;
 use importantcoding\businesstobusiness\variables\BusinessToBusinessVariable;
 use importantcoding\businesstobusiness\models\Settings;
 use importantcoding\businesstobusiness\elements\Voucher as VoucherElement;
@@ -62,6 +63,7 @@ use yii\base\Event;
  *
  * @property  ShippingRulesBusinessesService $shippingRulesBusinesses
  * @property  GatewayRulesBusinessesService $gatewayRulesBusinesses
+ * @property  DefaultRulesService $defaultRules
  * @property  EmployeeService $employee
  * @property  BusinessService $business
  * @property  VoucherService $voucher
@@ -136,7 +138,7 @@ class BusinessToBusiness extends Plugin
 
                 $event->rules['business-to-business/settings/default'] = 'business-to-business/base/settings';
                 $event->rules['business-to-business/settings/employee-settings'] = 'business-to-business/employees/edit-fieldlayout';
-                $event->rules['business-to-business/settings/business-settings'] = 'business-to-business/business-settings/edit';
+                $event->rules['business-to-business/settings/business-settings'] = 'business-to-business/business/edit-default-rules';
 
                 $event->rules['business-to-business/business/new'] = 'business-to-business/business/edit';
                 $event->rules['business-to-business/business/<businessId:\d+>'] = 'business-to-business/business/edit';

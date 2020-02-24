@@ -53,31 +53,31 @@ class DefaultRules extends Model
         ];
     }
 
-    public function getShippingRules(): array
-    {
-        // if (null === $this->_shippingRulesBusinesses) {
-        //     $this->_shippingRulesBusinesses = BusinessToBusiness::$plugin->shippingRulesBusinesses->getShippingRulesByBusinessId((int)$this->id);
-        // }
+    // public function getShippingRules(): array
+    // {
+    //     // if (null === $this->_shippingRulesBusinesses) {
+    //     //     $this->_shippingRulesBusinesses = BusinessToBusiness::$plugin->shippingRulesBusinesses->getShippingRulesByBusinessId((int)$this->id);
+    //     // }
 
-        return $this->_shippingRulesBusinesses;
-    }
+    //     return $this->_shippingRulesBusinesses;
+    // }
 
-    public function setShippingRuleBusinesses(array $models)
-    {
-        $this->_shippingRulesBusinesses = $models;
-    }
+    // public function setShippingRuleBusinesses(array $models)
+    // {
+    //     $this->_shippingRulesBusinesses = $models;
+    // }
 
-    public function getGatewayRules(): array
-    {
-        // if (null === $this->_gatewayRulesBusinesses) {
-        //     $this->_gatewayRulesBusinesses = BusinessToBusiness::$plugin->gatewayRulesBusinesses->getGatewayRulesByBusinessId((int)$this->id);
-        // }
+    // public function getGatewayRules(): array
+    // {
+    //     // if (null === $this->_gatewayRulesBusinesses) {
+    //     //     $this->_gatewayRulesBusinesses = BusinessToBusiness::$plugin->gatewayRulesBusinesses->getGatewayRulesByBusinessId((int)$this->id);
+    //     // }
 
-        return $this->_gatewayRulesBusinesses;
-    }
+    //     return $this->_gatewayRulesBusinesses;
+    // }
 
-    public function setGatewayRuleBusinesses(array $models)
-    {
-        $this->_gatewayRulesBusinesses = $models;
-    }
+    // public function setGatewayRuleBusinesses(array $models)
+    // {
+    //     $this->_gatewayRulesBusinesses = $models;
+    // }
 }

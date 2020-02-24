@@ -13,6 +13,8 @@ use importantcoding\businesstobusiness\models\Business as BusinessModel;
 use importantcoding\businesstobusiness\models\BusinessSites as BusinessSitesModel;
 use importantcoding\businesstobusiness\models\ShippingRulesBusiness as ShippingRulesBusinessModel;
 use importantcoding\businesstobusiness\models\GatewayRulesBusiness as GatewayRulesBusinessModel;
+use importantcoding\businesstobusiness\models\DefaultRules as DefaultRulesModel;
+use importantcoding\businesstobusiness\records\DefaultRules as DefaultRulesRecord;
 use importantcoding\businesstobusiness\records\Business as BusinessRecord;
 
 use Craft;
@@ -26,6 +28,7 @@ use craft\commerce\Plugin as Commerce;
 
 use importantcoding\businesstobusiness\records\ShippingRulesBusiness as ShippingRulesBusinessRecord;
 use importantcoding\businesstobusiness\records\GatewayRulesBusiness as GatewayRulesBusinessRecord;
+
 /**
  * Business Controller
  *
@@ -469,4 +472,164 @@ class BusinessController extends Controller
 
         return $this->asJson(['success' => true]);
     }
+
+    public function actionEditDefaultRules()
+    {
+        // $variables['shippingMethods'] = BusinessToBusiness::$plugin->defaultRules->getDefaultRulesByShippingMethod();
+        // if(!$variables['shippingMethods'])
+        // {
+        //     $variables['shippingMethods'] = Commerce::getInstance()->getShippingMethods()->getAllShippingMethods();
+        //     $shippingRules = [];
+        //     foreach($variables['shippingMethods'] as $shippingMethod)
+        //     {   
+        //         $shippingRules[$shippingMethod->id] = new DefaultRulesModel();
+        //         $shippingRules[$shippingMethod->id]->name = $shippingMethod->name;
+        //         $shippingRules[$shippingMethod->id]->shippingMethodId = $shippingMethod->id;
+        //     }
+        //     $variables['shippingRules'] = $shippingRules;
+        // } else {
+        //     $shippingRules = [];
+        //     foreach($variables['shippingMethods'] as $shippingMethod)
+        //     {   
+        //         $shippingRules[$shippingMethod->id]->name = $shippingMethod->name;
+        //         $shippingRules[$shippingMethod->id]->shippingMethodId = $shippingMethod->id;
+        //     }
+        //     $variables['shippingRules'] = $shippingRules;
+        // }
+
+        $variables['shippingMethods'] = Commerce::getInstance()->getShippingMethods()->getAllShippingMethods();
+        $variables['shippingRules'] = BusinessToBusiness::$plugin->defaultRules->getDefaultRulesByShippingMethod();
+        if(!$variables['shippingRules'])
+        {
+            $shippingRules = [];
+            foreach($variables['shippingMethods'] as $shippingMethod)
+            {   
+                $shippingRules[$shippingMethod->id] = new DefaultRulesModel();
+                $shippingRules[$shippingMethod->id]->name = $shippingMethod->name;
+                $shippingRules[$shippingMethod->id]->shippingMethodId = $shippingMethod->id;
+            }
+            $variables['shippingRules'] = $shippingRules;
+        }
+            
+
+        // $variables['gateways'] = BusinessToBusiness::$plugin->defaultRules->getDefaultRulesByShippingMethod();
+        // if(!$variables['gateways'])
+        // {
+        //         $variables['gateways'] = Commerce::getInstance()->getGateways()->getAllGateways();
+            
+            
+        //     $gatewayRules = [];
+        //     foreach($variables['gateways'] as $gateway)
+        //     {   
+        //         $gatewayRules[$gateway->id] = new GatewayRulesBusinessModel();
+        //         $gatewayRules[$gateway->id]->name = $gateway->name;
+        //         $gatewayRules[$gateway->id]->gatewayId = $gateway->id;
+        //     }
+        // }
+        // $variables['gatewayRules'] = BusinessToBusiness::$plugin->defaultRules->getDefaultRulesByShippingMethod();
+
+
+
+        //     $variables['gatewayRules'] = $gatewayRules;
+
+        $variables['gateways'] = Commerce::getInstance()->getGateways()->getAllGateways();
+        $variables['gatewayRules'] = BusinessToBusiness::$plugin->defaultRules->getDefaultRulesByShippingMethod();
+        if(!$variables['gatewayRules'])
+        {
+            $gatewayRules = [];
+            foreach($variables['gateways'] as $gateway)
+            {   
+                $gatewayRules[$gateway->id] = new GatewayRulesBusinessModel();
+                $gatewayRules[$gateway->id]->name = $gateway->name;
+                $gatewayRules[$gateway->id]->gatewayId = $gateway->id;
+            }
+            $variables['gatewayRules'] = $gatewayRules;
+        }
+            
+            $variables['ShippingRulesOptions'] = [];
+            $variables['ShippingRulesOptions'][] = ['label' => 'Allow', 'value' => ShippingRulesBusinessRecord::CONDITION_ALLOW];
+            $variables['ShippingRulesOptions'][] = ['label' => 'Disallow', 'value' => ShippingRulesBusinessRecord::CONDITION_DISALLOW];
+            $variables['ShippingRulesOptions'][] = ['label' => 'Require', 'value' => ShippingRulesBusinessRecord::CONDITION_REQUIRE];
+            $variables['ShippingRulesOptions'][] = ['label' => 'Apply Cost to Voucher', 'value' => ShippingRulesBusinessRecord::CONDITION_INCLUDED];
+
+            $variables['GatewayRulesOptions'] = [];
+            $variables['GatewayRulesOptions'][] = ['label' => 'Allow', 'value' => GatewayRulesBusinessRecord::CONDITION_ALLOW];
+            $variables['GatewayRulesOptions'][] = ['label' => 'Disallow', 'value' => GatewayRulesBusinessRecord::CONDITION_DISALLOW];
+            $variables['GatewayRulesOptions'][] = ['label' => 'Require', 'value' => GatewayRulesBusinessRecord::CONDITION_REQUIRE];
+
+            $orderStatuses = Commerce::getInstance()->getOrderStatuses()->getAllOrderStatuses();
+            foreach($orderStatuses as $orderStatus)
+            {
+                if($orderStatus->default)
+                {
+                    $variables['defaultOrderStatus'] = $orderStatus->id;
+                    break;
+                } 
+            }
+            $variables['orderStatusOptions'] = ArrayHelper::map($orderStatuses, 'id', 'name');
+
+        return $this->renderTemplate('business-to-business/settings/businesssettings/_edit', $variables);
+    }
+    
+    public function actionSaveDefaultRules()
+    {
+        $shippingRulesBusiness = [];
+        $allShippingRulesBusiness = Craft::$app->getRequest()->getBodyParam('shippingRulesBusiness');
+        
+        if($allShippingRulesBusiness)
+        {
+            foreach ($allShippingRulesBusiness as $key => $shippingRuleBusiness) {
+
+                $shippingMethod = Commerce::getInstance()->getShippingMethods()->getShippingMethodById($key);
+
+                $shippingRulesBusiness[$key] = new DefaultRulesModel($shippingRuleBusiness);
+                $shippingRulesBusiness[$key]->name = $shippingMethod->name;
+                $shippingRulesBusiness[$key]->shippingMethodId = $key;
+                $shippingRulesBusiness[$key]->condition = $shippingRuleBusiness['condition'];
+                if(!BusinessToBusiness::$plugin->business->saveDefaultRule($shippingRulesBusiness[$key]))
+                {
+                    die('failed');
+                }
+                // if(BusinessToBusiness::$plugin->shippingRulesBusinesses->checkExistingRule($business->id, $key))
+                // {
+                //     BusinessToBusiness::$plugin->shippingRulesBusinesses->saveShippingRuleBusiness($shippingRulesBusiness[$key], false);
+                // } else {
+                //     BusinessToBusiness::$plugin->shippingRulesBusinesses->createShippingRuleBusiness($shippingRulesBusiness[$key], false);
+                // }
+
+                
+            }
+        }
+
+        $gatewayRulesBusiness = [];
+        $allGatewayRulesBusiness = Craft::$app->getRequest()->getBodyParam('gatewayRulesBusiness');
+        if($allGatewayRulesBusiness)
+        {
+            foreach ($allGatewayRulesBusiness as $key => $gatewayRuleBusiness) {
+
+                $gateway = Commerce::getInstance()->getGateways()->getGatewayById($key);
+
+                $gatewayRulesBusiness[$key] = new DefaultRulesModel($gatewayRuleBusiness);
+                $gatewayRulesBusiness[$key]->name = $gateway->name;
+                $gatewayRulesBusiness[$key]->gatewayId = $key;
+                $gatewayRulesBusiness[$key]->condition = $gatewayRuleBusiness['condition'];
+                $gatewayRulesBusiness[$key]->orderStatusId = $gatewayRuleBusiness['orderStatusId'];
+
+                if(!BusinessToBusiness::$plugin->business->saveDefaultRule($gatewayRulesBusiness[$key]))
+                {
+                    
+                }
+                
+                // if(BusinessToBusiness::$plugin->shippingRulesBusinesses->checkExistingRule($business->id, $key))
+                // {
+                //     BusinessToBusiness::$plugin->shippingRulesBusinesses->saveShippingRuleBusiness($shippingRulesBusiness[$key], false);
+                // } else {
+                //     BusinessToBusiness::$plugin->shippingRulesBusinesses->createShippingRuleBusiness($shippingRulesBusiness[$key], false);
+                // }
+
+                
+            }
+        }
+    }
+
 }

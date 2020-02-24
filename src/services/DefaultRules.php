@@ -37,6 +37,10 @@ class DefaultRules extends Component
     private $_fetchedAllGatewayBusinesses;
     private $_fetchedAllGatewayRules;
     private $_GatewayRulesByBusinessId = [];
+
+    private $_shippingMethodCategoriesById = [];
+    private $_fetchedAllShippingMethodBusinesses;
+    private $_fetchedAllShippingMethodRules;
     // Public Methods
     // =========================================================================
 
@@ -53,23 +57,40 @@ class DefaultRules extends Component
      // Public Methods
     // =========================================================================
 
-    public function getGatewayRulesByBusinessId(int $businessId)
+    public function getDefaultRulesByShippingMethod()
     {
-
-        if (isset($this->_GatewayRulesByBusinessId[$businessId])) {
-            return $this->_GatewayRulesByBusinessId[$businessId];
+        if (isset($this->_fetchedAllShippingMethodRules)) {
+            return $this->_fetchedAllShippingMethodRules;
         }
         
-        $rows = $this->_createGatewayRulesBusinessQuery()
-            ->where(['businessId' => $businessId])
+        $rows = $this->_createDefaultRulesQuery()
+            ->where(['not', ['shippingMethodId' => null]])
             ->all();
        
-        $this->_GatewayRulesByBusinessId[$businessId] = [];
+        $this->_fetchedAllShippingMethodRules = [];
         foreach ($rows as $row) {
-            $this->_GatewayRulesByBusinessId[$businessId][$row['id']] = new GatewayRulesBusinessModel($row);
+            $this->_fetchedAllShippingMethodRules[$row['id']] = new DefaultRulesModel($row);
         }
         
-        return $this->_GatewayRulesByBusinessId[$businessId];
+        return $this->_fetchedAllShippingMethodRules;
+    }
+
+    public function getDefaultRulesByGateway()
+    {
+        if (isset($this->_fetchedAllGatewayRules)) {
+            return $this->_fetchedAllGatewayRules;
+        }
+        
+        $rows = $this->_createDefaultRulesQuery()
+            ->where(['not', ['gatewayId' => null]])
+            ->all();
+       
+        $this->_fetchedAllGatewayRules = [];
+        foreach ($rows as $row) {
+            $this->_fetchedAllGatewayRules[$row['id']] = new DefaultRulesModel($row);
+        }
+        
+        return $this->_fetchedAllGatewayRules;
     }
 
     public function saveRules(DefaultRulesModel $DefaultRules): bool
@@ -174,19 +195,18 @@ class DefaultRules extends Component
         }
     }
 
-    private function _createGatewayRulesBusinessQuery(): Query
+    private function _createDefaultRulesQuery(): Query
     {
         return (new Query())
             ->select([
                 'id',
                 'name',
                 'gatewayId',
-                'businessId',
-                'voucherId',
+                'shippingMethodId',
                 'orderStatusId',
                 'condition'
             ])
-            ->from(['{{%businesstobusiness_gatewayrules_business}}']);
+            ->from(['{{%businesstobusiness_defaultrules}}']);
     }
     
 }
