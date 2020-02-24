@@ -14,7 +14,6 @@
 
 {% block content %}
 {% from _self import templateField %}
-    {{ fieldLayout.id }}
     <input type="hidden" name="action" value="business-to-business/employee-settings/save">
     {% include "_includes/fieldlayoutdesigner" with {
     fieldLayout: craft.app.fields.getLayoutByType('importantcoding\\businesstobusiness\\elements\\Employee')
