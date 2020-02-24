@@ -119,24 +119,30 @@ class EmployeesController extends Controller
         return $this->renderTemplate('business-to-business/employees/_edit', $variables);
     }
 
-    public function actionSaveFieldLayout()
+    public function actionEditFieldlayout(array $variables = []): Response
+    {
+        $fieldLayout = Craft::$app->getFields()->getLayoutByType(Employee::class);
+        $variables['fieldLayout'] = $fieldLayout;
+        $variables['title'] = Craft::t('business-to-business', 'Employee Settings');
+
+        return $this->renderTemplate('business-to-business/settings/employeesettings/_edit', $variables);
+    }
+
+    public function actionSaveFieldlayout()
     {
         $this->requirePostRequest();
-        $this->requireAdmin();
 
-        // Set the field layout
         $fieldLayout = Craft::$app->getFields()->assembleLayoutFromPost();
-        $fieldLayout->type = Employee::class;
-
-        if (!Craft::$app->getUsers()->saveLayout($fieldLayout)) {
-            Craft::$app->getSession()->setError(Craft::t('app', 'Couldn’t save employee fields.'));
-
-            return null;
-        }
-
-        Craft::$app->getSession()->setNotice(Craft::t('app', 'User fields saved.'));
-
+        // $configData = [StringHelper::UUID() => $fieldLayout->getConfig()];
+        $fieldLayout->type = 'importantcoding\businesstobusiness\elements\Employee';
+        // Craft::$app->getProjectConfig()->set(EmployeeServices::CONFIG_FIELDLAYOUT_KEY, $configData);
+        \Craft::$app->getFields()->saveLayout($fieldLayout);
+        Craft::$app->getSession()->setNotice(Craft::t('app', 'Employee fields saved.'));
         return $this->redirectToPostedUrl();
+
+        // $fieldLayout = \Craft::$app->getFields()->assembleLayoutFromPost();
+        // $fieldLayout->type = EmployeeElement::class;
+        // \Craft::$app->getFields()->saveLayout($fieldLayout);
     }
 
     public function actionDelete(int $employeeId = NULL)

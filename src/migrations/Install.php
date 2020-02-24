@@ -115,22 +115,6 @@ class Install extends Migration
                 ]);
         }
 
-        // businesstobusiness_employee_settings table
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%businesstobusiness_employee_settings}}');
-        if ($tableSchema === null) {
-            $tablesCreated = true;
-            $this->createTable(
-                '{{%businesstobusiness_employee_settings}}', [
-                    'id' => $this->primaryKey(),
-                    'dateCreated' => $this->dateTime()->notNull(),
-                    'dateUpdated' => $this->dateTime()->notNull(),
-                    'uid' => $this->uid(),
-                    
-                    // employee_settings values
-                    'fieldLayoutId' => $this->integer(),
-                ]);
-        }
-
         // businesstobusiness_business table
         $tableSchema = Craft::$app->db->schema->getTableSchema('{{%businesstobusiness_business}}');
         if ($tableSchema === null) {
@@ -323,9 +307,6 @@ class Install extends Migration
     {   
         // employee indexes
         $this->createIndex($this->db->getIndexName('{{%businesstobusiness_employee}}', 'id', true), '{{%businesstobusiness_employee}}', 'id', true);
-        
-        // employee_settings indexes
-        $this->createIndex($this->db->getIndexName('{{%businesstobusiness_employee_settings}}', 'fieldLayoutId', false), '{{%businesstobusiness_employee_settings}}', 'fieldLayoutId', false);
 
         // business indexes 
         $this->createIndex($this->db->getIndexName('{{%businesstobusiness_business}}', 'id', true), '{{%businesstobusiness_business}}', 'id', true);
@@ -638,7 +619,6 @@ class Install extends Migration
     protected function dropForeignKeys()
     {
         MigrationHelper::dropAllForeignKeysOnTable('{{%businesstobusiness_employee}}', $this);
-        MigrationHelper::dropAllForeignKeysOnTable('{{%businesstobusiness_employee_settings}}', $this);
         MigrationHelper::dropAllForeignKeysOnTable('{{%businesstobusiness_business}}', $this);
         MigrationHelper::dropAllForeignKeysOnTable('{{%businesstobusiness_shippingrules_business}}', $this);
         MigrationHelper::dropAllForeignKeysOnTable('{{%businesstobusiness_gatewayrules_business}}', $this);
@@ -659,9 +639,6 @@ class Install extends Migration
     
     //businesstobusiness_employee table
         $this->dropTableIfExists('{{%businesstobusiness_employee}}');
-    
-    //businesstobusiness_employee_settings table
-        $this->dropTableIfExists('{{%businesstobusiness_employee_settings}}');
 
     // businesstobusiness_business table
         $this->dropTableIfExists('{{%businesstobusiness_business}}');

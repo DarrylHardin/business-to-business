@@ -135,7 +135,7 @@ class BusinessToBusiness extends Plugin
                 $event->rules['business-to-business/business'] = 'business-to-business/business/index';
 
                 $event->rules['business-to-business/settings/default'] = 'business-to-business/base/settings';
-                $event->rules['business-to-business/settings/employee-settings'] = 'business-to-business/employee-settings/edit';
+                $event->rules['business-to-business/settings/employee-settings'] = 'business-to-business/employees/edit-fieldlayout';
                 $event->rules['business-to-business/settings/business-settings'] = 'business-to-business/business-settings/edit';
 
                 $event->rules['business-to-business/business/new'] = 'business-to-business/business/edit';
