@@ -643,8 +643,11 @@ class Install extends Migration
     // businesstobusiness_business table
         $this->dropTableIfExists('{{%businesstobusiness_business}}');
 
-    // businesstobusiness_business table
+    // businesstobusiness_shippingrules_business table
         $this->dropTableIfExists('{{%businesstobusiness_shippingrules_business}}');
+
+    // businesstobusiness_gatewayrules_business table
+    $this->dropTableIfExists('{{%businesstobusiness_gatewayrules_business}}');
 
     // businesstobusiness_business table
         $this->dropTableIfExists('{{%businesstobusiness_defaultrules}}');
