@@ -83,13 +83,18 @@ class BusinessController extends Controller
                 $variables['brandNewBusiness'] = true;
             }
         }
-
+        $variables['shippingRules'] = BusinessToBusiness::$plugin->defaultRules->getDefaultRulesByShippingMethod();
+        $variables['gatewayRules'] = BusinessToBusiness::$plugin->defaultRules->getDefaultRulesByGateway();
+        $variables['vouchersExist'] = false;
+        
         if(!$variables['brandNewBusiness'])
         {
             $variables['shippingMethods'] = Commerce::getInstance()->getShippingMethods()->getAllShippingMethods();
             $variables['shippingRules'] = BusinessToBusiness::$plugin->shippingRulesBusinesses->getShippingRulesByBusinessId($businessId);
+
             if(!$variables['shippingRules'])
             {
+                $variables['rulesNotice'] = "Please go to Settings and set your default rules";
                 $shippingRules = [];
                 foreach($variables['shippingMethods'] as $shippingMethod)
                 {   
@@ -116,40 +121,37 @@ class BusinessController extends Controller
                 $variables['gatewayRules'] = $gatewayRules;
             }
             
-            $variables['ShippingRulesOptions'] = [];
-            $variables['ShippingRulesOptions'][] = ['label' => 'Allow', 'value' => ShippingRulesBusinessRecord::CONDITION_ALLOW];
-            $variables['ShippingRulesOptions'][] = ['label' => 'Disallow', 'value' => ShippingRulesBusinessRecord::CONDITION_DISALLOW];
-            $variables['ShippingRulesOptions'][] = ['label' => 'Require', 'value' => ShippingRulesBusinessRecord::CONDITION_REQUIRE];
-            $variables['ShippingRulesOptions'][] = ['label' => 'Apply Cost to Voucher', 'value' => ShippingRulesBusinessRecord::CONDITION_INCLUDED];
+           
 
-            $variables['GatewayRulesOptions'] = [];
-            $variables['GatewayRulesOptions'][] = ['label' => 'Allow', 'value' => GatewayRulesBusinessRecord::CONDITION_ALLOW];
-            $variables['GatewayRulesOptions'][] = ['label' => 'Disallow', 'value' => GatewayRulesBusinessRecord::CONDITION_DISALLOW];
-            $variables['GatewayRulesOptions'][] = ['label' => 'Require', 'value' => GatewayRulesBusinessRecord::CONDITION_REQUIRE];
-
-            $orderStatuses = Commerce::getInstance()->getOrderStatuses()->getAllOrderStatuses();
-            foreach($orderStatuses as $orderStatus)
-            {
-                if($orderStatus->default)
-                {
-                    $variables['defaultOrderStatus'] = $orderStatus->id;
-                    break;
-                } 
-            }
-            $variables['orderStatusOptions'] = ArrayHelper::map($orderStatuses, 'id', 'name');
-
-
-            $variables['vouchersExist'] = false;
             if(BusinessToBusiness::$plugin->voucher->getVouchersByBusinessId($businessId))
             {
                 $variables['vouchersExist'] = true;
             }
             
         } 
-        // else {
-        //     
-        // }
-            
+        
+        
+        $variables['ShippingRulesOptions'] = [];
+        $variables['ShippingRulesOptions'][] = ['label' => 'Allow', 'value' => ShippingRulesBusinessRecord::CONDITION_ALLOW];
+        $variables['ShippingRulesOptions'][] = ['label' => 'Disallow', 'value' => ShippingRulesBusinessRecord::CONDITION_DISALLOW];
+        $variables['ShippingRulesOptions'][] = ['label' => 'Require', 'value' => ShippingRulesBusinessRecord::CONDITION_REQUIRE];
+        $variables['ShippingRulesOptions'][] = ['label' => 'Apply Cost to Voucher', 'value' => ShippingRulesBusinessRecord::CONDITION_INCLUDED];
+
+        $variables['GatewayRulesOptions'] = [];
+        $variables['GatewayRulesOptions'][] = ['label' => 'Allow', 'value' => GatewayRulesBusinessRecord::CONDITION_ALLOW];
+        $variables['GatewayRulesOptions'][] = ['label' => 'Disallow', 'value' => GatewayRulesBusinessRecord::CONDITION_DISALLOW];
+        $variables['GatewayRulesOptions'][] = ['label' => 'Require', 'value' => GatewayRulesBusinessRecord::CONDITION_REQUIRE];
+
+        $orderStatuses = Commerce::getInstance()->getOrderStatuses()->getAllOrderStatuses();
+        foreach($orderStatuses as $orderStatus)
+        {
+            if($orderStatus->default)
+            {
+                $variables['defaultOrderStatus'] = $orderStatus->id;
+                break;
+            } 
+        }
+        $variables['orderStatusOptions'] = ArrayHelper::map($orderStatuses, 'id', 'name');
         
         
         
@@ -533,7 +535,7 @@ class BusinessController extends Controller
         //     $variables['gatewayRules'] = $gatewayRules;
 
         $variables['gateways'] = Commerce::getInstance()->getGateways()->getAllGateways();
-        $variables['gatewayRules'] = BusinessToBusiness::$plugin->defaultRules->getDefaultRulesByShippingMethod();
+        $variables['gatewayRules'] = BusinessToBusiness::$plugin->defaultRules->getDefaultRulesByGateway();
         if(!$variables['gatewayRules'])
         {
             $gatewayRules = [];

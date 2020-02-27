@@ -460,15 +460,30 @@ class Business extends Component
 
     public function checkExistingRule(array $rules)
     {
-        $gatewayId = $rules['gatewayId'];
-        $shippingMethodId = $rules['shippingMethodId'];
-        return (new Query())
+    
+        if($rules['gatewayId'])
+        {
+            return (new Query())
             ->select([
                 'id',
             ])
             ->from(['{{%businesstobusiness_defaultrules}}'])
-            ->where(['gatewayId' => $gatewayId] OR ['shippingMethodId' => $shippingMethodId])
+            ->where(['gatewayId' => $rules['gatewayId']])
             ->one();
+        }
+        if($rules['shippingMethodId'])
+        {
+            return (new Query())
+            ->select([
+                'id',
+            ])
+            ->from(['{{%businesstobusiness_defaultrules}}'])
+            ->where(['shippingMethodId' => $rules['shippingMethodId']])
+            ->one();
+        }
+
+        return null;
+        
     }
 
 
@@ -476,8 +491,8 @@ class Business extends Component
     {
         $DefaultRuleExists = null;
         $isNewDefaultRule = !$DefaultRule->id;
-        // $rules = ['shippingMethodId' => $DefaultRule->shippingMethodId, 'gatewayId' => $DefaultRule->gatewayId];
-
+        $rules = ['shippingMethodId' => $DefaultRule->shippingMethodId, 'gatewayId' => $DefaultRule->gatewayId];
+        $DefaultRuleExists = $this->checkExistingRule($rules);
         if (!$isNewDefaultRule) {
             $DefaultRuleRecord = DefaultRulesRecord::findOne($DefaultRule->id);
 
