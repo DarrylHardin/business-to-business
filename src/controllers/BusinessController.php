@@ -128,7 +128,16 @@ class BusinessController extends Controller
                 $variables['vouchersExist'] = true;
             }
             
-        } 
+        }  else {
+            if($defaultDiscount = BusinessToBusiness::$plugin->getSettings()->defaultDiscount)
+            {
+                $variables['business']->discount = $defaultDiscount;
+            }
+            if($defaultAutoVerify = BusinessToBusiness::$plugin->getSettings()->defaultAutoVerify)
+            {
+                $variables['business']->autoVerify = $defaultAutoVerify;
+            }            
+        }
         
         
         $variables['ShippingRulesOptions'] = [];
