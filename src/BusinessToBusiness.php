@@ -11,6 +11,7 @@
 namespace importantcoding\businesstobusiness;
 
 use importantcoding\businesstobusiness\adjusters\VoucherAdjuster;
+use importantcoding\businesstobusiness\adjusters\InvoiceAdjuster;
 use importantcoding\businesstobusiness\services\Employee as EmployeeService;
 use importantcoding\businesstobusiness\services\Business as BusinessService;
 use importantcoding\businesstobusiness\services\Voucher as VoucherService;
@@ -39,9 +40,11 @@ use craft\web\twig\variables\CraftVariable;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\commerce\services\ShippingMethods;
+use craft\helpers\ArrayHelper;
 // use craft\events\UserAssignGroupEvent;
 // use craft\events\RegisterCpNavItemsEvent;
 // use craft\web\twig\variables\Cp;
+use importantcoding\businesstobusiness\events\VoucherAdjustmentsEvent;
 use craft\helpers\UrlHelper;
 use craft\commerce\elements\Order;
 use craft\commerce\services\OrderAdjustments;
@@ -51,10 +54,15 @@ use craft\commerce\events\RegisterAvailableShippingMethodsEvent;
 use craft\commerce\events\TransactionEvent;
 use craft\commerce\services\Transactions;
 use craft\commerce\events\DefaultOrderStatusEvent;
+use craft\commerce\events\LineItemEvent;
+use craft\commerce\services\LineItems;
+use craft\commerce\models\LineItem;
 use craft\commerce\services\OrderStatuses;
+use craft\commerce\Plugin as Commerce;
+use craft\commerce\models\Customer;
 use DateTime;
 use yii\base\Event;
-
+use yii\base\Exception;
 /**
  *
  * @author    Darryl Hardin
@@ -172,6 +180,7 @@ class BusinessToBusiness extends Plugin
         // Register new adjustment
         Event::on(OrderAdjustments::class, OrderAdjustments::EVENT_REGISTER_ORDER_ADJUSTERS, function(RegisterComponentTypesEvent $event) {
             $event->types[] = VoucherAdjuster::class;
+            $event->types[] = InvoiceAdjuster::class;
         });
 
         // Register our elements
@@ -222,6 +231,92 @@ class BusinessToBusiness extends Plugin
             {
                 
             });
+
+        // Event::on(
+        //      LineItems::class,
+        //      LineItems::EVENT_POPULATE_LINE_ITEM,
+        //      function(LineItemEvent $event) {
+        //          // @var LineItem $lineItem
+        //          $lineItem = $event->lineItem;
+        //          // @var bool $isNew
+        //          $isNew = $event->isNew;
+         
+        //          // Modify the price of a line item
+        //          // ...
+        //      }
+        //  );
+
+        Event::on(
+                 Order::class,
+                //  Order::EVENT_AFTER_COMPLETE_ORDER,
+                Order::EVENT_BEFORE_COMPLETE_ORDER,
+                 function(Event $event) {
+                     // @var Order $order
+                    $order = $event->sender;
+                    $orderTotal = $order->getTotal();
+                    // die($orderTotal);
+                    if($orderTotal < 0)
+                    {
+                        $orderTotal = 0;
+                    }
+                    $lineItems = $order->getLineItems();
+                    $voucherItems = [];
+                    foreach($lineItems as $lineItem)
+                    {
+                        if($lineItem->options['purchasedWithVoucher'] == 'yes')
+                        {
+                            ArrayHelper::append($voucherItems, $lineItem);
+                        }
+                        
+                    }
+                    
+                    // $originalPrice = $voucherItem->price;
+                    // // $salePrice = $lineItem->salePrice;
+                    // $companyPrice = $originalPrice
+                    // die($salePrice);
+                    //  $newOrder = Commerce::getInstance()->getOrders()->actionNewOrder();
+                   
+                    
+
+                    $business = BusinessToBusiness::$plugin->business->getBusinessById($order->getFieldValue('businessId'));
+                    // $managerId = BusinessToBusiness::$plugin->business->getManagerById($business->managerId);
+                    // die(var_dump($business->managerId));
+                    $newOrder = new Order();
+                    $newOrder->number = Commerce::getInstance()->getCarts()->generateCartNumber();
+                    // $customer getCustomerByUserId($id)
+                    if (!$customer = Commerce::getInstance()->getCustomers()->getCustomerByUserId($business->managerId)) {
+                        $customer = new Customer();
+                        Commerce::getInstance()->getCustomers()->saveCustomer($customer);
+                    }
+                    
+
+                    $newOrder->customerId = $customer->id;
+                    $newOrder->origin = Order::ORIGIN_CP;
+                    foreach($voucherItems as $voucherItem)
+                    {
+                        $newOrder->addLineItem($voucherItem);
+                    }
+                    
+
+                    foreach ($order->getAdjustments() as $adjustment) {
+                        if ($adjustment->type === VoucherAdjuster::ADJUSTMENT_TYPE) {
+                            $adjustmentAmount = -1 * $orderTotal;
+                            $adjustment->amount = $adjustmentAmount;
+                            $event = new VoucherAdjustmentsEvent([
+                                'order' => $order,
+                                'adjustments' => $adjustment,
+                            ]);
+                            
+                            $newOrder->setAdjustments($event->adjustments);
+                        }
+                    }
+                    if (!Craft::$app->getElements()->saveElement($newOrder)) {
+                        throw new Exception(Commerce::t('Can not create a new order'));
+                    }
+                    // die(var_dump($newOrder));
+                    
+                 }
+             );
 
         // Event::on(
         //     Users::class,

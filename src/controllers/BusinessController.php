@@ -25,7 +25,8 @@ use craft\helpers\ArrayHelper;
 use yii\web\Response;
 
 use craft\commerce\Plugin as Commerce;
-
+use craft\commerce\elements\Order;
+use craft\commerce\models\Customer;
 use importantcoding\businesstobusiness\records\ShippingRulesBusiness as ShippingRulesBusinessRecord;
 use importantcoding\businesstobusiness\records\GatewayRulesBusiness as GatewayRulesBusinessRecord;
 
@@ -453,6 +454,36 @@ class BusinessController extends Controller
 
                 
             // }
+
+            // create invoice order
+            if (!$customer = Commerce::getInstance()->getCustomers()->getCustomerByUserId($business->managerId)) {
+                $customer = new Customer();
+                Commerce::getInstance()->getCustomers()->saveCustomer($customer);
+            }
+
+            $invoice = null;
+            $orders = Commerce::getInstance()->getOrders()->getOrdersByCustomer($customer);
+            foreach($orders as $order)
+            {
+                if($order->getFieldValue('businessInvoice'))
+                {
+                    $invoice = $order;
+                }
+            }
+            if(!$invoice)
+            {
+                $invoice = new Order();
+                $invoice->number = Commerce::getInstance()->getCarts()->generateCartNumber();
+                $invoice->setFieldValue('businessInvoice', 1);
+                $invoice->setFieldValue('businessId', $business->id);
+                $invoice->setFieldValue('businessName', $business->name);
+                $invoice->setFieldValue('businessHandle', $business->handle);
+                $invoice->orderStatusId = 29;
+                if (!Craft::$app->getElements()->saveElement($invoice)) {
+                    throw new Exception(Commerce::t('Can not create a new order'));
+                }
+            }
+            
 
             Craft::$app->getSession()->setNotice(Craft::t('business-to-business', 'Business saved.'));
 

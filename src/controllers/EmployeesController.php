@@ -213,7 +213,6 @@ class EmployeesController extends Controller
         // }
         $employee = $this->_setEmployeeFromPost($employeeId);
         $employee->businessId = $request->getBodyParam('businessId');
-        
 
         // $employee->authorized = $request->getBodyParam('authorized');
         $employee->timesVoucherUsed = $request->getBodyParam('timesVoucherUsed');

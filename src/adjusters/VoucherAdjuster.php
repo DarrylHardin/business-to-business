@@ -3,7 +3,7 @@ namespace importantcoding\businesstobusiness\adjusters;
 
 // use importantcoding\voucher\elements\Code;
 use importantcoding\businesstobusiness\BusinessToBusiness;
-use importantcoding\businesstobusiness\events\DiscountAdjustmentsEvent;
+use importantcoding\businesstobusiness\events\VoucherAdjustmentsEvent;
 use importantcoding\businesstobusiness\elements\Voucher;
 use importantcoding\businesstobusiness\elements\Employee as EmployeeElement;
 use Craft;
@@ -32,12 +32,14 @@ class VoucherAdjuster extends Component implements AdjusterInterface
     private $_orderTotal;
     private $_shippingTotal;
     // private $_voucherTotal;
+    
 
     // Public Methods
     // =========================================================================
 
     public function adjust(Order $order): array
     {
+        
         $user = Craft::$app->getUser()->getIdentity();
         $adjustments = [];
         if($user)
@@ -127,7 +129,7 @@ class VoucherAdjuster extends Component implements AdjusterInterface
                 // }
                 // return false;
                 // }
-                $event = new DiscountAdjustmentsEvent([
+                $event = new VoucherAdjustmentsEvent([
                     'order' => $order,
                     'adjustments' => $adjustments,
                 ]);
@@ -135,7 +137,7 @@ class VoucherAdjuster extends Component implements AdjusterInterface
                 if (!$event->isValid) {
                     return false;
                 }
-        
+                
                 return $event->adjustments;
         }
 
@@ -159,8 +161,8 @@ class VoucherAdjuster extends Component implements AdjusterInterface
         $adjustment->name = $business->name ." ". $voucher;
         $adjustment->orderId = $order->id;
         $adjustment->description = 'Voucher for ' . $business->name ." ". $voucher;
-        $adjustment->sourceSnapshot = ['business' => $business->name, 'businessId' => $businessId];
-
+        $adjustment->sourceSnapshot = ['business' => $business->name, 'businessId' => $businessId, 'voucher' => $voucherValue];
+        $adjustment->setOrder($order);
         if ($this->_orderTotal < $voucherValue) 
         {
             $adjustment->amount = $this->_orderTotal * -1;

@@ -39,6 +39,7 @@
             "employee": "importantcoding\\businesstobusiness\\services\\Employee",
             "business": "importantcoding\\businesstobusiness\\services\\Business",
             "voucher": "importantcoding\\businesstobusiness\\services\\Voucher",
+            "invoices": "importantcoding\\businesstobusiness\\services\\Invoices",
             "shippingRulesBusinesses": "importantcoding\\businesstobusiness\\services\\ShippingRulesBusinesses",
             "gatewayRulesBusinesses": "importantcoding\\businesstobusiness\\services\\GatewayRulesBusinesses",
             "defaultRules": "importantcoding\\businesstobusiness\\services\\DefaultRules"
