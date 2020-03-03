@@ -13,44 +13,117 @@ use craft\commerce\elements\Order;
 use craft\commerce\models\OrderAdjustment;
 use craft\commerce\helpers\Currency;
 use craft\commerce\records\Discount as DiscountRecord;
-
+use craft\helpers\ArrayHelper;
+use craft\commerce\adjusters\Tax;
 use DateTime;
 
 
 class InvoiceAdjuster extends Component implements AdjusterInterface
 {
-    const ADJUSTMENT_TYPE = 'outstanding';
+    const ADJUSTMENT_TYPE = 'employeePaid';
 
     public function adjust(Order $order): array
     {
+        $adjustments = [];
+        if($order->getFieldValue('businessInvoice'))
+        {
 
-        // $paidStatus = $order->getPaidStatus();
-        $adjustmentAmount = 0;
-        $voucherExists = false;
+        
+            // $paidStatus = $order->getPaidStatus();
+            
+            $voucherExists = false;
+            // $originalPrice = 0;
+            // $order->getFieldValue('businessId');
+            
+            // foreach ($order->getAdjustments() as $adjustment) 
+            // {
+            //     if ($adjustment->type === VoucherAdjuster::ADJUSTMENT_TYPE) {
+                if(count($order->getLineItems()))
+                foreach ($order->getLineItems() as $lineItem)
+                {
+                    $voucher = false;
+                    $voucherValue = 0;
+                    $voucherName = '';
+                    $employeeId = null;
+                    $tax = 0;
+                    foreach($lineItem->options as $key => $value)
+                    {
+                        
+                        if($key == 'voucherValue')
+                        {
+                            $voucherValue = $value;
+                            $voucher = true;
+                            
+                            //just to make sure we trigger this only once
+                            foreach($lineItem->getAdjustments() as $adjustment)
+                            {
+                                if($adjustment->type == Tax::ADJUSTMENT_TYPE)
+                                {
+                                    $tax = $adjustment->amount;
+                                }
+                            }  
 
-        $order->getFieldValue('businessId');
+                        }
+                        if($key == '$voucherName')
+                        {
+                            $$voucherName = $value;
+                            $voucher = true;
+                        }
+                        if($key == '$employeeId')
+                        {
+                            $$employeeId = $value;
+                            $voucher = true;
+                        }
+                                        
+                    }
+                    if($voucher)
+                    {
+                        
+                        // die($value);
+                        $adjustmentAmount = 0; // if voucher covered complete cost
+                        // die($lineItem->price + $tax);
 
-        foreach ($order->getAdjustments() as $adjustment) {
-            if ($adjustment->type === VoucherAdjuster::ADJUSTMENT_TYPE) {
-                $adjustmentAmount = -1 * $adjustment->amount;
-                $voucherExists = true;
+                        // $voucherValue = -1 * $voucherValue;
+                        // die($voucherValue);
+                        // $tax = round($tax, 2);
+                        // die($lineItem->price);
+                        // die($voucherValue);
+                        if($lineItem->price == -1 * $voucherValue) // if the price of the item is more than the the adjustment amount the difference is the employee's
+                        {
+                            $adjustmentAmount = 0;
+                            // $adjustmentAmount = -1 * $adjustmentAmount;
+                        } else {
+                            // $tax = 0;
+                            $adjustmentAmount = $voucherValue + $lineItem->price + $tax;
+                        }
+                        $adjustment = new OrderAdjustment();
+                        $adjustment->type = self::ADJUSTMENT_TYPE;
+                        $adjustment->name = $voucherName;
+                        $adjustment->description = "Amount the employee paid";
+                        $adjustment->sourceSnapshot = ['Employee Price' => -1 * $adjustmentAmount, 'Employee Taxes Paid' => -1 * $tax];
+                        $adjustment->amount = -1 * $adjustmentAmount;
+                        $adjustment->setOrder($order);
+                        $adjustment->setLineItem($lineItem);
+                        $adjustments[] = $adjustment;
+                        // return [$adjustment];
+                        
+                        // die(var_dump($adjustments));
+                        // ArrayHelper::append($adjustments, $adjustment);
+                        // die('made it?');
+                        // $voucherExists = true;
+                    
+                    }
+                    
+                }
+            // die(var_dump($adjustments));
+            if(count($adjustments))
+            {
+                // die('here');
+                return $adjustments;
             }
+            return [];
         }
-
-        if (
-            $order->getFieldValue('businessInvoice') &&
-            $voucherExists
-        ) {
-            $adjustment = new OrderAdjustment();
-            $adjustment->type = self::ADJUSTMENT_TYPE;
-            $adjustment->name = 'Outstanding balance';
-            $adjustment->sourceSnapshot = [];
-            $adjustment->amount = $adjustmentAmount;
-            $adjustment->setOrder($order);
-
-            return [$adjustment];
-        }
-
+            
         return [];
     }
 }

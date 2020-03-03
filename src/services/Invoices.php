@@ -20,6 +20,7 @@ use yii\base\Component;
 use craft\commerce\Plugin as Commerce;
 use craft\commerce\elements\Order;
 use craft\commerce\models\Customer;
+use importantcoding\businesstobusiness\models\Business;
 use yii\base\Exception;
 
 /**
@@ -37,22 +38,23 @@ use yii\base\Exception;
  */
 class Invoices extends Component
 {
-public function getInvoice(Business $business)
+
+
+public function getInvoice(Business $business): Order
     {
         // create invoice order
-        if (!$customer = Commerce::getInstance()->getCustomers()->getCustomerByUserId($business->managerId)) {
-            $customer = new Customer();
-            Commerce::getInstance()->getCustomers()->saveCustomer($customer);
+        if (!$manager = Commerce::getInstance()->getCustomers()->getCustomerByUserId($business->managerId)) {
+            $manager = new Customer();
+            Commerce::getInstance()->getCustomers()->saveCustomer($manager);
         }
-
         
-        $invoice = $this->findInvoice($customer);
+        $invoice = $this->findInvoice($manager);
 
         if(!$invoice)
         {
-            if($this->createInvoice($business))
+            if($this->createInvoice($business, $manager))
             {
-                $invoice = $this->findInvoice($customer);
+                $invoice = $this->findInvoice($manager);
             }
         }
 
@@ -60,10 +62,11 @@ public function getInvoice(Business $business)
         
     }
 
-    public function createInvoice(Business $business): bool
+    public function createInvoice(Business $business, Customer $manager): bool
     {
         $invoice = new Order();
         $invoice->number = Commerce::getInstance()->getCarts()->generateCartNumber();
+        $invoice->customerId = $manager->id;
         $invoice->setFieldValue('businessInvoice', 1);
         $invoice->setFieldValue('businessId', $business->id);
         $invoice->setFieldValue('businessName', $business->name);
@@ -76,9 +79,10 @@ public function getInvoice(Business $business)
 
     }
 
-    public function findInvoice(Customer $customer): Order
+    public function findInvoice(Customer $manager)
     {
-        $orders = Commerce::getInstance()->getOrders()->getOrdersByCustomer($customer);
+        $invoice = null;
+        $orders = $this->getOrdersByManager($manager);
         foreach($orders as $order)
         {
             if($order->getFieldValue('businessInvoice'))
@@ -87,6 +91,23 @@ public function getInvoice(Business $business)
             }
         }
         return $invoice;
+    }
+
+    public function getOrdersByManager(Customer $manager)
+    {
+        if (!$manager) {
+            return null;
+        }
+
+        $query = Order::find();
+        if ($manager instanceof Customer) {
+            $query->customer($manager);
+        } else {
+            $query->customerId($manager->id);
+        }
+        $query->limit(null);
+
+        return $query->all();
     }
 }
 ?>
