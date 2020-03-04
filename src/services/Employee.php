@@ -15,6 +15,8 @@ use importantcoding\businesstobusiness\elements\Employee as EmployeeElement;
 
 use Craft;
 use craft\base\Component;
+
+use craft\commerce\Plugin as Commerce;
 use craft\db\Query;
 use yii\web\HttpException;
 use yii\base\Exception;
@@ -153,26 +155,47 @@ class Employee extends Component
 
     public function delete(EmployeeElement $employee) : bool
     {
+        // $this->enforceEmployeePermissions($employee);
+        
         $orders = \craft\commerce\elements\Order::find()
             ->user($employee->userId)
             ->orderStatus([9, 10])
             ->all();
-        if($orders)
+
+        foreach($orders as $order)
         {
-            foreach($orders as $order)
+            // $order->setFieldValue('orderStatusId', 11);
+            $order->orderStatusId = 11;
+            Craft::$app->getElements()->saveElement($order);
+
+        }
+        if (!$employee) {
+            throw new Exception(Craft::t('business-to-business', 'No employee exists with the ID “{id}”.',['id' => $employeeId]));
+        }
+
+        $business = BusinessToBusiness::$plugin->business->getBusinessById($employee->businessId);
+        
+        $invoices = \craft\commerce\elements\Order::find()
+            ->user($business->managerId)
+            ->orderStatus([27])
+            ->all();
+        $options = [];
+        foreach($invoices as $invoice)
+        {
+            foreach($invoice->getLineItems() as $invoiceItem)
             {
-                // $order->setFieldValue('orderStatusId', 11);
-                $order->orderStatusId = 11;
-                Craft::$app->getElements()->saveElement($order);
-            }
+                $purchasable = Commerce::getInstance()->getPurchasables()->getPurchasableById($invoiceItem->purchasableId);
+                $options = $invoiceItem->options;
+                $lineItem = Commerce::getInstance()->getLineItems()->resolveLineItem($invoice->id, $purchasable->id, $options);
+                $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_ALL);
+                $invoice->removeLineItem($lineItem);
+                $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_NONE);
+                if (!Craft::$app->getElements()->saveElement($invoice)) {
+                    throw new Exception(Commerce::t('Can not create a new order'));
+                }   
+            }            
         }
         
-        if (!$employee) {
-            throw new Exception(Craft::t('business-to-business', 'No employee exists with the ID “{id}”.',['id' => $employee->id]));
-        }
-
-        // $this->enforceEmployeePermissions($employee);
-
         if (!Craft::$app->getElements()->deleteElement($employee)) {
             if (Craft::$app->getRequest()->getAcceptsJson()) {
                 $this->asJson(['success' => false]);
@@ -183,7 +206,7 @@ class Employee extends Component
                 'employee' => $employee
             ]);
 
-            return false;
+            return null;
         }
 
         

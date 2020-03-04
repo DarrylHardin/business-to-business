@@ -18,6 +18,7 @@ use craft\helpers\Localization;
 use craft\helpers\UrlHelper;
 use craft\models\Site;
 use craft\web\Controller;
+use craft\commerce\Plugin as Commerce;
 
 use yii\base\Exception;
 use yii\web\ForbiddenHttpException;
@@ -154,49 +155,10 @@ class EmployeesController extends Controller
             $employeeId = Craft::$app->getRequest()->getRequiredParam('employeeId');
         }
         $employee = Employee::findOne($employeeId);
-        // if(!BusinessToBusiness::$plugin->employee->delete($employee))
-        // {
-        //     return null;
-        // }
-        $orders = \craft\commerce\elements\Order::find()
-            ->user($employee->userId)
-            ->orderStatus([9, 10])
-            ->all();
-
-        foreach($orders as $order)
+        if(BusinessToBusiness::$plugin->employee->delete($employee))
         {
-            // $order->setFieldValue('orderStatusId', 11);
-            $order->orderStatusId = 11;
-            Craft::$app->getElements()->saveElement($order);
+            return $this->redirectToPostedUrl($employee);    
         }
-        if (!$employee) {
-            throw new Exception(Craft::t('business-to-business', 'No employee exists with the ID “{id}”.',['id' => $employeeId]));
-        }
-
-        $this->enforceEmployeePermissions($employee);
-
-        if (!Craft::$app->getElements()->deleteElement($employee)) {
-            if (Craft::$app->getRequest()->getAcceptsJson()) {
-                $this->asJson(['success' => false]);
-            }
-
-            Craft::$app->getSession()->setError(Craft::t('business-to-business', 'Couldn’t delete employee.'));
-            Craft::$app->getUrlManager()->setRouteParams([
-                'employee' => $employee
-            ]);
-
-            return null;
-        }
-
-        
-
-        if (Craft::$app->getRequest()->getAcceptsJson()) {
-            $this->asJson(['success' => true]);
-        }
-
-        Craft::$app->getSession()->setNotice(Craft::t('business-to-business', 'Employee deleted.'));
-
-        return $this->redirectToPostedUrl($employee);
     }
 
     public function actionSave()

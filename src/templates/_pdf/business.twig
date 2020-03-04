@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">
+    <style>
+    {% include 'shop/style.css' %}
+    table.heading td{
+        vertical-align: top;
+    }
+    </style>
+</head>
+
+<body>
+
+{% set orderTable %}
+    <div class="row">
+        <div class="twelve columns">
+        
+            <table class="u-full-width heading">
+                <tr>
+                    <td>
+                        <h5>Details</h5>
+                        <ul>
+                            <li><strong>{{ "Customer"|t }}:</strong> {{ order.customer.email }}</li>
+                            <li><strong>{{ "Total"|t }}:</strong> {{ order.totalPrice|currency(order.currency) }}</li>
+                            <li><strong>{{ "Date"|t }}:</strong> {{ order.dateOrdered|date('medium') }}</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <h5>Shipping Address</h5>
+                        {% if order.shippingAddress %}
+                        {% include 'shop/_includes/addresses/address' with { address: order.shippingAddress } %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <h5>Billing Address</h5>
+                        {% if order.billingAddress %}
+                        {% include 'shop/_includes/addresses/address' with { address: order.billingAddress } %}
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        
+            <table style="margin:0 auto">
+                <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th class="text-right">Total</th>
+                </tr>
+                </thead>
+                <tbody valign="top">
+                {% for item in order.lineItems %}
+                    <tr>
+                        <td>
+                            <ul>
+                            <li>{{ item.description }}</li>
+                            {% if item.options.shoesize is defined %}
+                                {% if item.options.shoesize != 0 %}
+                                    <li>Shoe Size: {{ item.options.shoesize }}</li>
+                                {% endif %}
+                            {% endif %}
+                            {% if item.options.superfeetSize is defined %}
+                                {% if item.options.superfeetSize %}
+                                    <li>Insole Size: {{ item.options.superfeetSize }}</li>
+                                {% endif %}
+                            {% endif %}
+                            <li>SKU: {{ item.sku }}</li>
+                        </ul>
+                        </td>
+                        <td>
+                            {% if item.onSale %}
+                                <strike>{{ item.price|currency(order.currency) }}</strike>   {{ item.salePrice|currency(order.currency) }}
+                            {% else %}
+                                {{ item.price|currency(order.currency) }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ item.qty }}
+                        </td>
+                        <td class="text-right">
+                            {{ item.total|currency(order.currency) }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% if not order.businessInvoice %}
+                    {% for adjustment in order.adjustments %}
+                        <tr>
+                            <td>{{ adjustment.type }}</td>
+                            <td colspan="2"><strong>{{ adjustment.name }}</strong>({{ adjustment.description }})</td>
+                            <td class="text-right">{{ adjustment.amount|currency(order.currency) }}</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+                <tr>
+                    <td colspan="4" class="text-right">
+                    {% if not order.businessInvoice %}
+                        Item Total: {{ order.itemTotal|currency(order.currency) }}
+                    {% endif %}
+                    <h4>Total: {{ order.totalPrice|currency(order.currency) }}</h4>
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+{% endset %}
+
+{# Use the option param passed into the pdf template to show different order pdf's depending on the context #}
+{% switch option %}
+{% case "receipt" %}
+    <h6>Footwear Outfitters - Receipt for Order #{{ order.number[:7] }}</h6>
+    {{ orderTable }}
+{% case "ajax" %}
+    <h6>Footwear Outfitters - NA</h6>
+{% default %}
+    <h6>Footwear Outfitters - Order #{{ order.number[:7] }}</h6>
+    {{ orderTable }}
+{% endswitch %}
+
+<p>No refunds on worn shoes or after 30 days. For full Return policy visit: FootwearOutfitters.net</p>
+
+
+</body>
+</html>

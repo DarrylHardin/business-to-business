@@ -64,6 +64,14 @@ use DateTime;
 use yii\base\Event;
 use yii\base\Exception;
 use craft\commerce\services\Purchasables;
+use craft\commerce\events\PdfEvent;
+use craft\commerce\services\Pdf;
+use craft\commerce\events\OrderStatusEvent;
+use craft\commerce\services\OrderHistories;
+use craft\commerce\models\OrderHistory;
+
+
+
 /**
  *
  * @author    Darryl Hardin
@@ -384,31 +392,20 @@ class BusinessToBusiness extends Plugin
         //     }
         // );
         
-        //checks if any voucher shoes are in the cart
-        Event::on(Discounts::class, Discounts::EVENT_BEFORE_MATCH_LINE_ITEM, function(MatchLineItemEvent $e) {
-                
+    
+    
+    Event::on(
+        Pdf::class,
+        Pdf::EVENT_BEFORE_RENDER_PDF,
+        function(PdfEvent $e) {
+            if($e->order->businessInvoice)
+            {
+                $e->template = "shop/_pdf/business";
+            }
             
-            // $e defaults to true
-            // if($e->['voucher']['p"200"er'] == 'yes')
-            // {
-            //     $e->isValid = false;
-            //     $user = Craft::$app->getUser()->getIdentity();
-            //     $employee = BusinessToBusiness::$plugin->employee->getEmployeeByUserId($user->id);
-            //         if($employee){
-            //             // if user has a voucher available the value to be set to true
-            //             // if($user['voucherAvailable'] == 'yes')
-            //             // {
-            //                 $positive = abs($e->discount->baseDiscount);
-            //                 // if user has applied a voucher that is valued more than the shoe
-            //                 if($e->lineItem->total - $positive >= 0)
-            //                 {
-            //                     $e->isValid = true;
-            //                 }
-            //             // }
-            //         }
-            // }
-            
-       });
+     
+        }
+    );
 
         Event::on(UserPermissions::class, UserPermissions::EVENT_REGISTER_PERMISSIONS, function(RegisterUserPermissionsEvent $event) {
             return $this->_permissions($event);
@@ -468,6 +465,26 @@ class BusinessToBusiness extends Plugin
                 Craft::$app->elements->saveElement($employee);
             }
         });
+
+        // Event::on(
+        //     OrderHistories::class,
+        //     OrderHistories::EVENT_ORDER_STATUS_CHANGE,
+        //     function(OrderStatusEvent $e) {
+        //         // @var OrderHistory $orderHistory
+        //         $orderHistory = $e->orderHistory;
+        //         // @var Order $order
+        //         $order = $e->order;
+                
+
+        //         if($order->businessId)
+        //         {
+        //             $orderHistory->newStatusId == 
+        //         }
+
+        //         // Let the delivery department know the order’s ready to be delivered
+        //         // ...
+        //     }
+        // );
 
         // Event::on(Transactions::class, Transactions::EVENT_AFTER_SAVE_TRANSACTION, function(TransactionEvent $e) {
         //         $e->status = STATUS_PENDING;

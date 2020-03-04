@@ -69,6 +69,7 @@ class Delete extends ElementAction
      */
     public function performAction(ElementQueryInterface $query): bool
     {
+        // die('die');
         $employees = $query->all();
         $elementsService = Craft::$app->getElements();
         foreach($employees as $employee)
@@ -93,6 +94,36 @@ class Delete extends ElementAction
                     }
                 }
             }
+
+
+            $business = BusinessToBusiness::$plugin->business->getBusinessById($employee->businessId);
+        
+            $invoices = \craft\commerce\elements\Order::find()
+                ->user($business->managerId)
+                ->orderStatus([27])
+                ->all();
+
+            foreach($invoices as $invoice)
+            {
+                
+                foreach($invoice->getLineItems() as $lineItem)
+                {
+                    foreach($lineItem->options as $key => $value)
+                    {
+                        // die('lineItem found');
+                        if($key == 'employeeId' && $value == $employee->id)
+                        {
+                            // die('employeeId found');
+                            $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_ALL);
+                            $invoice->removeLineItem($lineItem);
+                            $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_NONE);
+                        }
+                    }    
+                
+                }
+                
+            }
+        // die('after invoices');
 
             // $this->enforceEmployeePermissions($employee);
             

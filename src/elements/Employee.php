@@ -339,14 +339,21 @@ class Employee extends Element
                 }
             }
         }
-        $voucher = BusinessToBusiness::$plugin->voucher->getVoucherById($this->voucherId);
+        
+        if($this->voucherId)
+        {
+            $voucher = BusinessToBusiness::$plugin->voucher->getVoucherById($this->voucherId);
+        }
+        
+        
+        
 
         if ($status === self::STATUS_LIVE) {
             
             $voucherAvailable = $this->voucherAvailable;
             // $dateVoucherUsed = $this->dateVoucherUsed ? $this->dateVoucherUsed->getTimestamp() : null;
             $authorized = $this->authorized;
-            if ($authorized) {
+            if ($authorized && $voucher) {
                 $voucherExpiry = $voucher->expiryDate;
                 $voucherExpired = false;
                 if($voucherExpiry != NULL)
@@ -368,6 +375,7 @@ class Employee extends Element
                 return self::STATUS_PENDING;
             }
         }
+        
         return self::STATUS_DISABLED;
         return $status;
     }
