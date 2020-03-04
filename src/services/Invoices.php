@@ -71,6 +71,7 @@ public function getInvoice(Business $business): Order
         $invoice->setFieldValue('businessId', $business->id);
         $invoice->setFieldValue('businessName', $business->name);
         $invoice->setFieldValue('businessHandle', $business->handle);
+        $invoice->origin = Order::ORIGIN_CP;
         $invoice->orderStatusId = 29;
         if (!Craft::$app->getElements()->saveElement($invoice)) {
             throw new Exception(Commerce::t('Can not create a new order'));

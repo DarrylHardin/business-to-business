@@ -79,29 +79,22 @@ class InvoiceAdjuster extends Component implements AdjusterInterface
                     if($voucher)
                     {
                         
-                        // die($value);
+                        
                         $adjustmentAmount = 0; // if voucher covered complete cost
-                        // die($lineItem->price + $tax);
-
-                        // $voucherValue = -1 * $voucherValue;
-                        // die($voucherValue);
-                        // $tax = round($tax, 2);
-                        // die($lineItem->price);
-                        // die($voucherValue);
-                        if($lineItem->price == -1 * $voucherValue) // if the price of the item is more than the the adjustment amount the difference is the employee's
+                        if($lineItem->price != -1 * $voucherValue || $lineItem->price > -1 * $voucherValue) // if the price of the item is more than the the adjustment amount the difference is the employee's
                         {
-                            $adjustmentAmount = 0;
+                            $adjustmentAmount = $voucherValue + $lineItem->price + $tax;
+                            $adjustmentAmount = -1 * $adjustmentAmount;
                             // $adjustmentAmount = -1 * $adjustmentAmount;
                         } else {
-                            // $tax = 0;
-                            $adjustmentAmount = $voucherValue + $lineItem->price + $tax;
+                            $tax = 0;
                         }
                         $adjustment = new OrderAdjustment();
                         $adjustment->type = self::ADJUSTMENT_TYPE;
                         $adjustment->name = $voucherName;
                         $adjustment->description = "Amount the employee paid";
-                        $adjustment->sourceSnapshot = ['Employee Price' => -1 * $adjustmentAmount, 'Employee Taxes Paid' => -1 * $tax];
-                        $adjustment->amount = -1 * $adjustmentAmount;
+                        $adjustment->sourceSnapshot = ['Employee Price' => $adjustmentAmount, 'Employee Taxes Paid' => -1 * $tax];
+                        $adjustment->amount = $adjustmentAmount;
                         $adjustment->setOrder($order);
                         $adjustment->setLineItem($lineItem);
                         $adjustments[] = $adjustment;

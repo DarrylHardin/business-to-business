@@ -254,6 +254,8 @@ class BusinessToBusiness extends Plugin
                  function(Event $event) {
                      // @var Order $order
                     $order = $event->sender;
+                    
+                    
                     $orderTotal = $order->getTotal();
                     // die($orderTotal);
                     if($orderTotal < 0)
@@ -264,13 +266,19 @@ class BusinessToBusiness extends Plugin
                     $voucherItems = [];
                     foreach($lineItems as $lineItem)
                     {
-                        if($lineItem->options['purchasedWithVoucher'] == 'yes')
+                        // die(var_dump($lineItem));
+                        foreach($lineItem->options as $option => $value)
                         {
-                            ArrayHelper::append($voucherItems, $lineItem);
+                            
+                            if($option == 'purchasedWithVoucher')
+                            {
+                            // die($option . $value);    
+                                ArrayHelper::append($voucherItems, $lineItem);
+                            }
+                
                         }
-                        
                     }
-                    
+                    // die('hmm');
                     // $originalPrice = $voucherItem->price;
                     // // $salePrice = $lineItem->salePrice;
                     // $companyPrice = $originalPrice
@@ -297,6 +305,8 @@ class BusinessToBusiness extends Plugin
                   
                     $invoice = BusinessToBusiness::$plugin->invoices->getInvoice($business);
                     // die(var_dump($invoice));
+                    $invoice->setRecalculationMode(Order::RECALCULATION_MODE_ALL);
+                    // die(var_dump($invoice));
                     foreach($voucherItems as $voucherItem)
                     {
                         // die(var_dump($voucherItem));
@@ -315,6 +325,7 @@ class BusinessToBusiness extends Plugin
                             die('wtf!');
                             throw new Exception(Commerce::t('Can not create a new lineItem'));
                         }
+                        
                         $currentUser = Craft::$app->getUser()->getIdentity();
                         
                         $employee = BusinessToBusiness::$plugin->employee->getEmployeeByUserId($currentUser->id);
@@ -342,9 +353,9 @@ class BusinessToBusiness extends Plugin
                     // 
                     if (!Craft::$app->getElements()->saveElement($invoice)) {
                         throw new Exception(Commerce::t('Can not create a new order'));
-                    }
-
-                    
+                    }   
+                    // die('end');                    
+                    $invoice->setRecalculationMode(Order::RECALCULATION_MODE_NONE);
                     // die(var_dump($newOrder));
                     
                  }
@@ -432,7 +443,12 @@ class BusinessToBusiness extends Plugin
         
 
         Event::on(OrderStatuses::class, OrderStatuses::EVENT_DEFAULT_ORDER_STATUS, function(DefaultOrderStatusEvent $e) {
-            
+            $order = $e->order;
+            if($order->getFieldValue('businessInvoice'))
+            {
+                $e->orderStatus->id = 29;
+            }
+
             $currentSite = Craft::$app->getSites()->currentSite->handle;
             // $user = Craft::$app->getUser();
             

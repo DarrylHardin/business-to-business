@@ -463,6 +463,9 @@ class BusinessController extends Controller
 
             // $invoice = null;
             $order = BusinessToBusiness::$plugin->invoices->getInvoice($business);
+            $order->markAsComplete();
+
+
             // die($order);
             // foreach($orders as $order)
             // {
