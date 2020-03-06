@@ -29,31 +29,13 @@ class InvoiceAdjuster extends Component implements AdjusterInterface
         if($order->getFieldValue('businessInvoice'))
         {
 
-        
-            // $paidStatus = $order->getPaidStatus();
-            
-            // $voucherExists = false;
-            // $originalPrice = 0;
-            // $order->getFieldValue('businessId');
-            
-            // foreach ($order->getAdjustments() as $adjustment) 
-            // {
-            //     if ($adjustment->type === VoucherAdjuster::ADJUSTMENT_TYPE) {
-                if(count($order->getLineItems()))
+            if(count($order->getLineItems()))
                 foreach ($order->getLineItems() as $lineItem)
                 {
                     $voucher = false;
                     $voucherValue = 0;
                     $voucherName = '';
                     $employeeId = null;
-                    $tax = $businessDiscount = 0;
-                    foreach($order->getAdjustments() as $adjustment)
-                    {
-                        if($adjustment->type = BusinessAdjuster::ADJUSTMENT_TYPE)
-                        {
-                            $businessDiscount = $adjustment->amount;
-                        }
-                    }
                     
                     foreach($lineItem->options as $key => $value)
                     {
@@ -63,16 +45,6 @@ class InvoiceAdjuster extends Component implements AdjusterInterface
                             $voucherValue = $value;
                             $voucher = true;
                             
-                            //just to make sure we trigger this only once
-                            // foreach($lineItem->getAdjustments() as $adjustment)
-                            // {
-                            //     if($adjustment->type == Tax::ADJUSTMENT_TYPE)
-                            //     {
-                            //         $tax = $adjustment->amount;
-                            //     }
-                                
-                            // }  
-
                         }
                         if($key == '$voucherName')
                         {
@@ -92,8 +64,8 @@ class InvoiceAdjuster extends Component implements AdjusterInterface
                         $discounts = $lineItem->getDiscount();
                         $existingLineItemPrice = round($lineItem->price + $discounts + $tax, 2);
                         
-                        $adjustmentAmount = 0; // if voucher covered complete cost
-                        if($existingLineItemPrice == $voucherValue) // if the price of the item is more than the the adjustment amount the difference is the employee's
+                        $adjustmentAmount = 0; 
+                        if($existingLineItemPrice == $voucherValue)
                         {
                             
                             $adjustmentAmount = -1 * $voucherValue;
@@ -107,25 +79,17 @@ class InvoiceAdjuster extends Component implements AdjusterInterface
                         $adjustment->type = self::ADJUSTMENT_TYPE;
                         $adjustment->name = $voucherName;
                         $adjustment->description = "Amount the employee paid";
-                        $adjustment->sourceSnapshot = ['Employee Price' => $adjustmentAmount, 'Employee Taxes Paid' => -1 * $tax];
+                        $adjustment->sourceSnapshot = ['Employee Price' => $adjustmentAmount];
                         $adjustment->amount = $adjustmentAmount;
                         $adjustment->setOrder($order);
                         $adjustment->setLineItem($lineItem);
                         $adjustments[] = $adjustment;
-                        // return [$adjustment];
-                        
-                        // die(var_dump($adjustments));
-                        // ArrayHelper::append($adjustments, $adjustment);
-                        // die('made it?');
-                        // $voucherExists = true;
-                    
                     }
                     
                 }
-            // die(var_dump($adjustments));
+            
             if(count($adjustments))
             {
-                // die('here');
                 return $adjustments;
             }
             return [];
