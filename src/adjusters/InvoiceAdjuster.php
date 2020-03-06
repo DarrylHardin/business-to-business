@@ -6,6 +6,7 @@ use importantcoding\businesstobusiness\BusinessToBusiness;
 use importantcoding\businesstobusiness\events\VoucherAdjustmentsEvent;
 use importantcoding\businesstobusiness\elements\Voucher;
 use importantcoding\businesstobusiness\elements\Employee as EmployeeElement;
+use importantcoding\businesstobusiness\adjusters\BusinessAdjuster;
 use Craft;
 use craft\base\Component;
 use craft\commerce\base\AdjusterInterface;
@@ -31,7 +32,7 @@ class InvoiceAdjuster extends Component implements AdjusterInterface
         
             // $paidStatus = $order->getPaidStatus();
             
-            $voucherExists = false;
+            // $voucherExists = false;
             // $originalPrice = 0;
             // $order->getFieldValue('businessId');
             
@@ -45,7 +46,15 @@ class InvoiceAdjuster extends Component implements AdjusterInterface
                     $voucherValue = 0;
                     $voucherName = '';
                     $employeeId = null;
-                    $tax = 0;
+                    $tax = $businessDiscount = 0;
+                    foreach($order->getAdjustments() as $adjustment)
+                    {
+                        if($adjustment->type = BusinessAdjuster::ADJUSTMENT_TYPE)
+                        {
+                            $businessDiscount = $adjustment->amount;
+                        }
+                    }
+                    
                     foreach($lineItem->options as $key => $value)
                     {
                         
@@ -55,13 +64,14 @@ class InvoiceAdjuster extends Component implements AdjusterInterface
                             $voucher = true;
                             
                             //just to make sure we trigger this only once
-                            foreach($lineItem->getAdjustments() as $adjustment)
-                            {
-                                if($adjustment->type == Tax::ADJUSTMENT_TYPE)
-                                {
-                                    $tax = $adjustment->amount;
-                                }
-                            }  
+                            // foreach($lineItem->getAdjustments() as $adjustment)
+                            // {
+                            //     if($adjustment->type == Tax::ADJUSTMENT_TYPE)
+                            //     {
+                            //         $tax = $adjustment->amount;
+                            //     }
+                                
+                            // }  
 
                         }
                         if($key == '$voucherName')
@@ -78,17 +88,21 @@ class InvoiceAdjuster extends Component implements AdjusterInterface
                     }
                     if($voucher)
                     {
-                        
+                        $tax = $lineItem->getTax();
+                        $discounts = $lineItem->getDiscount();
+                        $existingLineItemPrice = round($lineItem->price + $discounts + $tax, 2);
                         
                         $adjustmentAmount = 0; // if voucher covered complete cost
-                        if($lineItem->price != -1 * $voucherValue || $lineItem->price > -1 * $voucherValue) // if the price of the item is more than the the adjustment amount the difference is the employee's
+                        if($existingLineItemPrice == $voucherValue) // if the price of the item is more than the the adjustment amount the difference is the employee's
                         {
-                            $adjustmentAmount = $voucherValue + $lineItem->price + $tax;
-                            $adjustmentAmount = -1 * $adjustmentAmount;
-                            // $adjustmentAmount = -1 * $adjustmentAmount;
-                        } else {
-                            $tax = 0;
+                            
+                            $adjustmentAmount = -1 * $voucherValue;
+                            
+                        } else if ($existingLineItemPrice > $voucherValue)
+                        {
+                            $adjustmentAmount = ($existingLineItemPrice + $voucherValue) * -1;
                         }
+
                         $adjustment = new OrderAdjustment();
                         $adjustment->type = self::ADJUSTMENT_TYPE;
                         $adjustment->name = $voucherName;

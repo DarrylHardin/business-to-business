@@ -11,6 +11,7 @@
 namespace importantcoding\businesstobusiness\services;
 use importantcoding\businesstobusiness\BusinessToBusiness;
 use importantcoding\businesstobusiness\elements\Voucher as VoucherElement;
+use importantcoding\businesstobusiness\elements\Employee;
 // use importantcoding\businesstobusiness\services\Employee;
 use Craft;
 use craft\events\SiteEvent;
@@ -109,6 +110,36 @@ public function getInvoice(Business $business): Order
         $query->limit(null);
 
         return $query->all();
+    }
+
+    public function deleteEmployeesInvoicedItems(Employee $employee)
+    {
+        $business = BusinessToBusiness::$plugin->business->getBusinessById($employee->businessId);
+        
+        $invoices = \craft\commerce\elements\Order::find()
+            ->user($business->managerId)
+            ->orderStatus([27])
+            ->all();
+        $options = [];
+        
+        foreach($invoices as $invoice)
+        {
+            foreach($invoice->getLineItems() as $invoiceItem)
+            {
+                $purchasable = Commerce::getInstance()->getPurchasables()->getPurchasableById($invoiceItem->purchasableId);
+                $options = $invoiceItem->options;
+                $lineItem = Commerce::getInstance()->getLineItems()->resolveLineItem($invoice->id, $purchasable->id, $options);
+                $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_ALL);
+                $invoice->removeLineItem($lineItem);
+                $invoice->recalculate();
+                $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_NONE);
+                if (!Craft::$app->getElements()->saveElement($invoice)) {
+                    throw new Exception(Commerce::t('Can not create a new order'));
+                }   
+            }
+                        
+        }
+        return true;
     }
 }
 ?>

@@ -15,6 +15,8 @@ use importantcoding\businesstobusiness\elements\Employee as EmployeeElement;
 
 use Craft;
 use craft\base\Component;
+use craft\queue\jobs\ResaveElements;
+use craft\events\SiteEvent;
 
 use craft\commerce\Plugin as Commerce;
 use craft\db\Query;
@@ -164,101 +166,39 @@ class Employee extends Component
 
         foreach($orders as $order)
         {
-            // $order->setFieldValue('orderStatusId', 11);
             $order->orderStatusId = 11;
             Craft::$app->getElements()->saveElement($order);
 
         }
         if (!$employee) {
-            throw new Exception(Craft::t('business-to-business', 'No employee exists with the ID “{id}”.',['id' => $employeeId]));
+            throw new Exception(Craft::t('business-to-business', 'No employee exists with the ID “{id}”.',['id' => $employee->id]));
         }
 
-        $business = BusinessToBusiness::$plugin->business->getBusinessById($employee->businessId);
-        
-        $invoices = \craft\commerce\elements\Order::find()
-            ->user($business->managerId)
-            ->orderStatus([27])
-            ->all();
-        $options = [];
-        foreach($invoices as $invoice)
+        if(BusinessToBusiness::$plugin->invoices->deleteEmployeesInvoicedItems($employee))
         {
-            foreach($invoice->getLineItems() as $invoiceItem)
-            {
-                $purchasable = Commerce::getInstance()->getPurchasables()->getPurchasableById($invoiceItem->purchasableId);
-                $options = $invoiceItem->options;
-                $lineItem = Commerce::getInstance()->getLineItems()->resolveLineItem($invoice->id, $purchasable->id, $options);
-                $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_ALL);
-                $invoice->removeLineItem($lineItem);
-                $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_NONE);
-                if (!Craft::$app->getElements()->saveElement($invoice)) {
-                    throw new Exception(Commerce::t('Can not create a new order'));
-                }   
-            }            
-        }
-        
-        if (!Craft::$app->getElements()->deleteElement($employee)) {
-            if (Craft::$app->getRequest()->getAcceptsJson()) {
-                $this->asJson(['success' => false]);
+            
+            if (!Craft::$app->getElements()->deleteElement($employee)) {
+                if (Craft::$app->getRequest()->getAcceptsJson()) {
+                    $this->asJson(['success' => false]);
+                }
+    
+                Craft::$app->getSession()->setError(Craft::t('business-to-business', 'Couldn’t delete employee.'));
+                Craft::$app->getUrlManager()->setRouteParams([
+                    'employee' => $employee
+                ]);
+    
+                return null;
             }
 
-            Craft::$app->getSession()->setError(Craft::t('business-to-business', 'Couldn’t delete employee.'));
-            Craft::$app->getUrlManager()->setRouteParams([
-                'employee' => $employee
-            ]);
-
-            return null;
+            if (Craft::$app->getRequest()->getAcceptsJson()) {
+                $this->asJson(['success' => true]);
+            }
+            
+            Craft::$app->getSession()->setNotice(Craft::t('business-to-business', 'Employee deleted.'));
+            return true;
         }
 
-        
-
-        if (Craft::$app->getRequest()->getAcceptsJson()) {
-            $this->asJson(['success' => true]);
-        }
-
-        Craft::$app->getSession()->setNotice(Craft::t('business-to-business', 'Employee deleted.'));
-        return true;
+        return null;
     }
-
-    // public function massDelete(int $employeeId) : bool
-    // {  
-    //     $employee = $this->getEmployeeById($employeeId);
-    //     $orders = \craft\commerce\elements\Order::find()
-    //         ->user($employee->userId)
-    //         ->orderStatus([9, 10])
-    //         ->all();
-
-    //     foreach($orders as $order)
-    //     {
-    //         $order->orderStatusId = 11;
-    //         Craft::$app->getElements()->saveElement($order);
-    //     }
-    //     if (!$employee) {
-    //         throw new Exception(Craft::t('business-to-business', 'No employee exists with the ID “{id}”.',['id' => $employee->id]));
-    //     }
-
-    //     $this->enforceEmployeePermissions($employee);
-
-    //     if (!Craft::$app->getElements()->deleteElement($employee)) {
-    //         if (Craft::$app->getRequest()->getAcceptsJson()) {
-    //             $this->asJson(['success' => false]);
-    //         }
-
-    //         Craft::$app->getSession()->setError(Craft::t('business-to-business', 'Couldn’t delete employee.'));
-    //         Craft::$app->getUrlManager()->setRouteParams([
-    //             'employee' => $employee
-    //         ]);
-
-    //         return false;
-    //     }
-
-        
-
-    //     if (Craft::$app->getRequest()->getAcceptsJson()) {
-    //         $this->asJson(['success' => true]);
-    //     }
-
-    //     Craft::$app->getSession()->setNotice(Craft::t('business-to-business', 'Employee deleted.'));
-    //     return true;
-    // }
 }
 

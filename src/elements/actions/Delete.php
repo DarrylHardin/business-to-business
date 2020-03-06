@@ -74,60 +74,67 @@ class Delete extends ElementAction
         $elementsService = Craft::$app->getElements();
         foreach($employees as $employee)
         {
-            $orders = \craft\commerce\elements\Order::find()
-            ->user($employee->userId)
-            ->orderStatusId([9, 10])
-            ->all();
+            if(BusinessToBusiness::$plugin->employee->delete($employee))
+            {
+                $successMessage = "Employees Successfully Deleted";
+            }
             
-            if($orders)
-            {
-                foreach($orders as $order)
-                {
+            // $orders = \craft\commerce\elements\Order::find()
+            // ->user($employee->userId)
+            // ->orderStatusId([9, 10])
+            // ->all();
+            
+            // if($orders)
+            // {
+            //     foreach($orders as $order)
+            //     {
                     
-                    // $order->setFieldValue('message', "Moved to rejected orders by deletion of employee");
-                    // $order->setFieldValue('orderStatusId', 11);
-                    $order->message = "Moved to rejected orders by deletion of employee";
-                    $order->orderStatusId = 11;
-                    if(!Craft::$app->getElements()->saveElement($order))
-                    {
-                        return false;
-                    }
-                }
-            }
+            //         // $order->setFieldValue('message', "Moved to rejected orders by deletion of employee");
+            //         // $order->setFieldValue('orderStatusId', 11);
+            //         $order->message = "Moved to rejected orders by deletion of employee";
+            //         $order->orderStatusId = 11;
+            //         if(!Craft::$app->getElements()->saveElement($order))
+            //         {
+            //             return false;
+            //         }
+            //     }
+            // }
 
 
-            $business = BusinessToBusiness::$plugin->business->getBusinessById($employee->businessId);
+            // $business = BusinessToBusiness::$plugin->business->getBusinessById($employee->businessId);
         
-            $invoices = \craft\commerce\elements\Order::find()
-                ->user($business->managerId)
-                ->orderStatus([27])
-                ->all();
+            // $invoices = \craft\commerce\elements\Order::find()
+            //     ->user($business->managerId)
+            //     ->orderStatus([27])
+            //     ->all();
 
-            foreach($invoices as $invoice)
-            {
+            // foreach($invoices as $invoice)
+            // {
                 
-                foreach($invoice->getLineItems() as $lineItem)
-                {
-                    foreach($lineItem->options as $key => $value)
-                    {
-                        // die('lineItem found');
-                        if($key == 'employeeId' && $value == $employee->id)
-                        {
-                            // die('employeeId found');
-                            $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_ALL);
-                            $invoice->removeLineItem($lineItem);
-                            $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_NONE);
-                        }
-                    }    
+            //     foreach($invoice->getLineItems() as $lineItem)
+            //     {
+            //         foreach($lineItem->options as $key => $value)
+            //         {
+            //             // die('lineItem found');
+            //             if($key == 'employeeId' && $value == $employee->id)
+            //             {
+            //                 // die('employeeId found');
+            //                 $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_ALL);
+            //                 $invoice->removeLineItem($lineItem);
+            //                 $invoice->setRecalculationMode(\craft\commerce\elements\Order::RECALCULATION_MODE_NONE);
+            //             }
+            //         }    
                 
-                }
+            //     }
                 
-            }
+            // }
+
+
         // die('after invoices');
 
             // $this->enforceEmployeePermissions($employee);
             
-            $elementsService->deleteElement($employee);
+            // $elementsService->deleteElement($employee);
         }
 
         $this->setMessage($this->successMessage);

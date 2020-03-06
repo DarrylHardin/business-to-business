@@ -12,6 +12,7 @@ namespace importantcoding\businesstobusiness;
 
 use importantcoding\businesstobusiness\adjusters\VoucherAdjuster;
 use importantcoding\businesstobusiness\adjusters\InvoiceAdjuster;
+use importantcoding\businesstobusiness\adjusters\BusinessAdjuster;
 use importantcoding\businesstobusiness\services\Employee as EmployeeService;
 use importantcoding\businesstobusiness\services\Business as BusinessService;
 use importantcoding\businesstobusiness\services\Voucher as VoucherService;
@@ -188,8 +189,12 @@ class BusinessToBusiness extends Plugin
 
         // Register new adjustment
         Event::on(OrderAdjustments::class, OrderAdjustments::EVENT_REGISTER_ORDER_ADJUSTERS, function(RegisterComponentTypesEvent $event) {
+            $event->types[] = BusinessAdjuster::class;
             $event->types[] = VoucherAdjuster::class;
             $event->types[] = InvoiceAdjuster::class;
+            array_unshift($event->types,BusinessAdjuster::class);
+            $event->types = array_unique($event->types);
+                   
         });
 
         // Register our elements
@@ -369,9 +374,9 @@ class BusinessToBusiness extends Plugin
                  }
              );
 
-             Event::on(Purchasables::class, Purchasables::EVENT_REGISTER_PURCHASABLE_ELEMENT_TYPES, function(RegisterComponentTypesEvent $e) {
-                $e->types[] = Invoice::class;
-            });
+            //  Event::on(Purchasables::class, Purchasables::EVENT_REGISTER_PURCHASABLE_ELEMENT_TYPES, function(RegisterComponentTypesEvent $e) {
+            //     $e->types[] = Invoice::class;
+            // });
 
         // Event::on(
         //     Users::class,
