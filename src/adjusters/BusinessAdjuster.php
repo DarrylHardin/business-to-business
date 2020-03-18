@@ -31,13 +31,14 @@ class BusinessAdjuster extends Component implements AdjusterInterface
 
     public function adjust(Order $order): array
     {
+        
         $user = Craft::$app->getUser()->getIdentity();
         $employee = null;
         if($user)
         {
             $employee = BusinessToBusiness::$plugin->employee->getEmployeeByUserId($user->id);
         }
-        if($employee or $order->businessInvoice)
+        if($employee && $order->siteId == 2 or $order->businessInvoice)
         {
             $adjustments = [];
             foreach($order->getLineItems() as $lineItem)

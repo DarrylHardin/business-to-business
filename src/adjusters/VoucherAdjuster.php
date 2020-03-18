@@ -6,6 +6,7 @@ use importantcoding\businesstobusiness\events\VoucherAdjustmentsEvent;
 use importantcoding\businesstobusiness\elements\Employee as EmployeeElement;
 
 use Craft;
+use craft\services\Sites;
 use craft\base\Component;
 use craft\commerce\base\AdjusterInterface;
 use craft\commerce\elements\Order;
@@ -29,10 +30,10 @@ class VoucherAdjuster extends Component implements AdjusterInterface
 
     public function adjust(Order $order): array
     {
-        
+        // $site = Craft::$app->getSites()->currentSite;
         $user = Craft::$app->getUser()->getIdentity();
         $adjustments = [];
-        if($user)
+        if($user && $order->siteId == 2)
         {
             
             $employee = EmployeeElement::find()->userId($user->id)->one();
@@ -58,57 +59,62 @@ class VoucherAdjuster extends Component implements AdjusterInterface
                         $maxQtyCount = 0;
                         
                         
-            
-                        foreach ($order->getLineItems() as $lineItem) {
-                            $tax = 0;
-                            // can rewrite to check if being used with voucher
-                            $isValidItem = 0;
-                            if($lineItem->options['purchasedWithVoucher'] == 'yes' && $maxQtyCount <= $maxQty)
-                            {
-                                for ($i=0; $i < $lineItem->qty; $i++) {
-                                    
-                                    if($maxQtyCount == $maxQty)
-                                    {
-                                        break;
-                                    }
-                                    $maxQtyCount++;
-                                    $isValidItem++;
-                                }
-            
-        
-                                $tax = $lineItem->getTax();
-                                $discounts = -1 * $lineItem->getDiscount();
-                                $existingLineItemPrice = round($lineItem->price - $discounts + $tax, 2);
-                                $existingLineItemPrice = round($existingLineItemPrice * $isValidItem, 2);
-                                
-                    
-                                
-                                //preparing model
-                                $adjustment = new OrderAdjustment();
-                                $adjustment->type = self::ADJUSTMENT_TYPE;
-                                $adjustment->name = $business->name ." ". $voucher;
-                                $adjustment->orderId = $order->id;
-                                $adjustment->description = 'Voucher for ' . $business->name ." ". $voucher;
-                                $adjustment->sourceSnapshot = ['business' => $business->name, 'businessId' => $business->id, 'voucher' => -1 * $voucherValue];
-                                $adjustment->setOrder($order);
-                                $adjustment->setLineItem($lineItem);
-                                
-                                
-                                $existingLineItemPrice  = $existingLineItemPrice * 1;
-                                //if the item is less than the vouchers allowance then the adjustment shouldn't go under 0
-                                if ($existingLineItemPrice < $voucherValue) 
+                        if($business)
+                        {
+
+                        
+                            foreach ($order->getLineItems() as $lineItem) {
+                                $tax = 0;
+                                // can rewrite to check if being used with voucher
+                                $isValidItem = 0;
+
+                                if($lineItem->options['purchasedWithVoucher'] == 'yes' && $maxQtyCount <= $maxQty)
                                 {
-                                    $adjustment->amount = $existingLineItemPrice * -1;
-                                } 
-                                else {
-                                    $adjustment->amount = $voucherValue * -1;
-                                }
-                                
+                                    for ($i=0; $i < $lineItem->qty; $i++) {
+                                        
+                                        if($maxQtyCount == $maxQty)
+                                        {
+                                            break;
+                                        }
+                                        $maxQtyCount++;
+                                        $isValidItem++;
+                                    }
+                
+            
+                                    $tax = $lineItem->getTax();
+                                    $discounts = -1 * $lineItem->getDiscount();
+                                    $existingLineItemPrice = round($lineItem->price - $discounts + $tax, 2);
+                                    $existingLineItemPrice = round($existingLineItemPrice * $isValidItem, 2);
+                                    
+                        
+                                    
+                                    //preparing model
+                                    $adjustment = new OrderAdjustment();
+                                    $adjustment->type = self::ADJUSTMENT_TYPE;
+                                    $adjustment->name = $business->name ." ". $voucher;
+                                    $adjustment->orderId = $order->id;
+                                    $adjustment->description = 'Voucher for ' . $business->name ." ". $voucher;
+                                    $adjustment->sourceSnapshot = ['business' => $business->name, 'businessId' => $business->id, 'voucher' => -1 * $voucherValue];
+                                    $adjustment->setOrder($order);
+                                    $adjustment->setLineItem($lineItem);
+                                    
+                                    
+                                    $existingLineItemPrice  = $existingLineItemPrice * 1;
+                                    //if the item is less than the vouchers allowance then the adjustment shouldn't go under 0
+                                    if ($existingLineItemPrice < $voucherValue) 
+                                    {
+                                        $adjustment->amount = $existingLineItemPrice * -1;
+                                    } 
+                                    else {
+                                        $adjustment->amount = $voucherValue * -1;
+                                    }
+                                    
 
-                                if ($adjustment->amount != 0) {
-                                    $adjustments[] = $adjustment;
-                                }
+                                    if ($adjustment->amount != 0) {
+                                        $adjustments[] = $adjustment;
+                                    }
 
+                                }
                             }
                         }
                     }
