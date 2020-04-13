@@ -325,7 +325,12 @@ class Voucher extends Element
         $business = $this->getBusiness();
 
         if ($business) {
-            return UrlHelper::cpUrl('business-to-business/vouchers/' . $business->handle . '/' . $this->id);
+            $url =  UrlHelper::cpUrl('business-to-business/vouchers/' . $business->handle . '/' . $this->id);
+            if (Craft::$app->getIsMultiSite()) {
+                $url .= '/' . $this->getSite()->handle;
+            }
+    
+            return $url;
         }
 
         return null;
@@ -495,7 +500,7 @@ class Voucher extends Element
     // {
     //     return $this->sku;
     // }
-    public function getProducts(): array
+    public function getProducts(int $siteId): array
     {
         if ($this->_products !== null) {
             return $this->_products;
@@ -511,7 +516,7 @@ class Voucher extends Element
         {
             foreach($this->products as $productId)
             {
-                ArrayHelper::append($this->_products, Commerce::getInstance()->getProducts()->getProductById($productId));
+                ArrayHelper::append($this->_products, Commerce::getInstance()->getProducts()->getProductById($productId, $siteId));
             }
             
             

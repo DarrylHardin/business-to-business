@@ -165,8 +165,8 @@ class BusinessToBusiness extends Plugin
                 $event->rules['business-to-business/vouchers/<businessHandle:{handle}>/new'] = 'business-to-business/vouchers/edit';
                 $event->rules['business-to-business/vouchers/<businessHandle:{handle}>/<voucherId:\d+>'] = 'business-to-business/vouchers/edit';
                 $event->rules['business-to-business/vouchers/<businessHandle:{handle}>/new/<siteHandle:\w+>'] = 'business-to-business/vouchers/edit';
-                $event->rules['business-to-business/vouchers/<businessHandle:{handle}>/<voucherId:\d+>'] = 'business-to-business/vouchers/edit';
-                $event->rules['business-to-business/vouchers/<businessHandle:{handle}>/<voucherId:\d+>/<siteHandle:\w+>'] = 'business-to-business/vouchers/edit';
+                $event->rules['business-to-business/vouchers/<businessHandle:{handle}>/<businessId:\d+>'] = 'business-to-business/vouchers/edit';
+                $event->rules['business-to-business/vouchers/<businessHandle:{handle}>/<businessId:\d+>/<siteHandle:\w+>'] = 'business-to-business/vouchers/edit';
 
                 $event->rules['business-to-business/employees'] = 'business-to-business/employees/index';
                 $event->rules['business-to-business/employees/<businessHandle:{handle}>'] = 'business-to-business/employees/index';
@@ -267,7 +267,7 @@ class BusinessToBusiness extends Plugin
                  function(Event $event) {
                      // @var Order $order
                     $order = $event->sender;
-                    if($order->businessId)
+                    if($order->siteId == 2)
                     {
                     
                         $orderTotal = $order->getTotal();

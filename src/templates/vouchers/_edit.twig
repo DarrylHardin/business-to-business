@@ -72,24 +72,25 @@
 {% endblock %}
 
 {% block contextMenu %}
+
     {% if craft.app.getIsMultiSite() %}
-        <div class="btn menubtn" data-icon="world">{{ voucher.site.name | t('site') }}</div>
+        <div class="btn menubtn" data-icon="world">{{ site.name | t('site') }}</div>
         <div class="menu">
             <ul class="padded">
                 {% for siteId in siteIds %}
-                    {% set site = craft.app.sites.getSiteById(siteId) %}
+                    {% set siteGen = craft.app.sites.getSiteById(siteId) %}
                     {% set status = siteId in enabledSiteIds ? 'enabled' : 'disabled' %}
 
                     <li>
-                        {% if siteId == voucher.siteId %}
+                        {% if siteId == site.id %}
                             <a class="sel">
-                                <div class="status {{ status }}"></div>{{ site.name | t('site') }}
+                                <div class="status {{ status }}"></div>{{ siteGen.name | t('site') }}
                             </a>
                         {% else %}
-                            {% set url = url('business-to-business/vouchers/#{businessHandle}/#{craft.app.request.getSegment(4)}/#{site.handle}') %}
+                            {% set url = url("business-to-business/vouchers/#{businessHandle}/#{craft.app.request.getSegment(4)}/#{siteGen.handle}") %}
 
                             <a href="{{ url }}">
-                                <div class="status {{ status }}"></div>{{ site.name | t('site') }}
+                                <div class="status {{ status }}"></div>{{ siteGen.name | t('site') }}
                             </a>
                         {% endif %}
                     </li>
@@ -98,21 +99,47 @@
         </div>
     {% endif %}
 {% endblock %}
+{# {% block contextMenu %}
+    {% if craft.app.getIsMultiSite() %}
+        <div class="btn menubtn sitemenubtn" data-icon="world">{{ product.site.name|t('site') }}</div>
+        <div class="menu">
+            <ul class="padded">
+                {% for siteId in siteIds %}
+                    {% set site = craft.app.sites.getSiteById(siteId) %}
+                    {% set status = siteId in enabledSiteIds ? 'enabled' : 'disabled' %}
+                    <li>
+                        {% if siteId == product.siteId %}
+                            <a class="sel" data-site-id="{{ siteId }}">
+                                <div class="status {{ status }}"></div>{{ site.name|t('site') }}
+                            </a>
+                        {% else %}
+                            {% set url = url("commerce/products/#{productTypeHandle}/#{craft.app.request.getSegment(4)}/#{site.handle}") %}
+                            <a href="{{ url }}" data-site-id="{{ siteId }}">
+                                <div class="status {{ status }}"></div>{{ site.name|t('site') }}
+                            </a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endblock %} #}
 
 {% block content %}
 <div id="voucher-tab">
 	<input type="hidden" name="action" value="business-to-business/vouchers/save">
 	{{ redirectInput('business-to-business/vouchers') }}
 	<input type="hidden" name="businessId" value="{{ business.id }}">
+    <input type="hidden" name="siteId" value="{{ site.id }}">
 	{% if voucher.id %}<input type="hidden" name="voucherId" value="{{ voucher.id }}">{% endif %}
 
 	<div id="fields">
         {%- import '_includes/forms' as forms -%}
-            
+   
             <div>
                 {{ forms.textField({
                     label: 'Title' | t('business-to-business'),
-                    site: voucher.site,
+                    site: site,
                     id: 'title',
                     name: 'title',
                     value: voucher.title,
@@ -232,7 +259,7 @@
             name: 'enabled',
             on: voucher.enabled
         }) }}
-
+        {{ voucher.site }}
         {% if craft.app.getIsMultiSite() %}
             {{ forms.lightswitchField({
                 label: 'Enabled for site' | t('business-to-business'),

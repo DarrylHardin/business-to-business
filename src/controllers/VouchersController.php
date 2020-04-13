@@ -156,15 +156,16 @@ class VouchersController extends Controller
                 throw new Exception('Invalid site handle: '.$siteHandle);
             }
         }
-
+        // die($variables['site']->id);
         $this->_prepareVariableArray($variables);
 
         if (!empty($variables['voucher']->id)) {
             $variables['title'] = $variables['voucher']->title;
-            $productIds = JSON::decode($variables['voucher']->products);
-
+            // $productIds = JSON::decode($variables['voucher']->products);
+            $site = $variables['site'];
+            $variables['voucher']->siteId = $site->id;
             
-            $variables['products'] = $variables['voucher']->getProducts();
+            $variables['products'] = $variables['voucher']->getProducts($variables['site']->id);
             
             // foreach($productIds as $productId)
             // {
@@ -179,12 +180,13 @@ class VouchersController extends Controller
         } else {
             $variables['title'] = Craft::t('business-to-business', 'Create a new voucher');
         }
-
+// die($variables['site']->id);
         // Can't just use the entry's getCpEditUrl() because that might include the site handle when we don't want it
         $variables['baseCpEditUrl'] = 'business-to-business/vouchers/' . $variables['businessHandle'] . '/{id}';
 
         // Set the "Continue Editing" URL
         $variables['continueEditingUrl'] = $variables['baseCpEditUrl'] . (Craft::$app->getIsMultiSite() && Craft::$app->getSites()->currentSite->id !== $variables['site']->id ? '/' . $variables['site']->handle : '');
+        // $variables['continueEditingUrl'] = $variables['baseCpEditUrl'] . (Craft::$app->getIsMultiSite() && Craft::$app->getSites()->currentSite->id !== $variables['site']->id ? '/' . $variables['site']->handle : '');
 
         $this->_maybeEnableLivePreview($variables);
 
@@ -209,7 +211,7 @@ class VouchersController extends Controller
             ];
         }
         $variables['productElementType'] = Product::class;
-
+        // die($variables['site']->id);
         return $this->renderTemplate('business-to-business/vouchers/_edit', $variables);
     }
 
@@ -415,11 +417,28 @@ class VouchersController extends Controller
         }
 
         if (empty($variables['site'])) {
-            $site = $variables['site'] = Craft::$app->getSites()->currentSite;
+                $variables['site'] = Craft::$app->getSites()->currentSite;
 
             if (!in_array($variables['site']->id, $variables['siteIds'], false)) {
-                $site = $variables['site'] = Craft::$app->getSites()->getSiteById($variables['siteIds'][0]);
+                $variables['site'] = Craft::$app->getSites()->getSiteById($variables['siteIds'][0]);
             }
+            $site = $variables['site'];
+        } else {
+            // Make sure they were requesting a valid site
+            /** @var Site $site */
+            $site = $variables['site'];
+            if (!in_array($site->id, $variables['siteIds'], false)) {
+                throw new ForbiddenHttpException('User not permitted to edit content in this site');
+            }
+        }
+        if (empty($variables['site'])) {
+            $variables['site'] = Craft::$app->getSites()->currentSite;
+
+            if (!in_array($variables['site']->id, $variables['siteIds'], false)) {
+                $variables['site'] = Craft::$app->getSites()->getSiteById($variables['siteIds'][0]);
+            }
+
+            $site = $variables['site'];
         } else {
             // Make sure they were requesting a valid site
             /** @var Site $site */
@@ -498,6 +517,7 @@ class VouchersController extends Controller
         $request = Craft::$app->getRequest();
         $voucherId = $request->getBodyParam('voucherId');
         $siteId = $request->getBodyParam('siteId');
+        // die($siteId);
 
         if ($voucherId) {
             $voucher = BusinessToBusiness::$plugin->voucher->getVoucherById($voucherId, $siteId);
