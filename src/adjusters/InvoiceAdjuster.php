@@ -61,6 +61,23 @@ class InvoiceAdjuster extends Component implements AdjusterInterface
                     if($voucher)
                     {
                         $tax = $lineItem->getTax();
+                        
+                        $business = BusinessToBusiness::$plugin->business->getBusinessById($order->businessId);
+                        if($business->taxExempt)
+                        {
+                            
+                            foreach ($lineItem->getAdjustments() as $adjustment)
+                            {
+                                // die($adjustment->type);
+                                if($adjustment->type == 'tax')
+                                {
+                                    $adjustment->amount = 0;
+                                    $adjustment->setLineItem($lineItem);
+                                    $adjustment->setOrder($order);
+                                    $tax = 0;
+                                }
+                            }
+                        }
                         $discounts = $lineItem->getDiscount();
                         $existingLineItemPrice = round($lineItem->price + $discounts + $tax, 2);
                         

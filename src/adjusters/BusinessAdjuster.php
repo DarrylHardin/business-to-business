@@ -33,12 +33,12 @@ class BusinessAdjuster extends Component implements AdjusterInterface
     {
         $site = Craft::$app->getSites()->currentSite;
         // die($site->id);
-        $user = Craft::$app->getUser()->getIdentity();
-        $employee = null;
-        if($user)
-        {
-            $employee = BusinessToBusiness::$plugin->employee->getEmployeeByUserId($user->id);
-        }
+        // $user = Craft::$app->getUser()->getIdentity();
+        // $employee = null;
+        // if($user)
+        // {
+        //     $employee = BusinessToBusiness::$plugin->employee->getEmployeeByUserId($user->id);
+        // }
         if($order->businessId or $order->businessInvoice)
         {
             $adjustments = [];
