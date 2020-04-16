@@ -304,6 +304,7 @@ class EmployeesController extends Controller
 
             foreach($orders as $order)
             {
+                BusinessToBusiness::$plugin->invoices->addOrderToInvoice($order);
                 // $order->setFieldValue('orderStatusId', 9);
                 $order->orderStatusId = 9;
                 Craft::$app->getElements()->saveElement($order);
@@ -318,6 +319,7 @@ class EmployeesController extends Controller
             foreach($orders as $order)
             {
                 // $order->setFieldValue('orderStatusId', 10);
+                
                 $order->orderStatusId = 10;
                 Craft::$app->getElements()->saveElement($order);
             }

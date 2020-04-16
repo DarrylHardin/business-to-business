@@ -12,6 +12,7 @@ namespace importantcoding\businesstobusiness\services;
 use importantcoding\businesstobusiness\BusinessToBusiness;
 use importantcoding\businesstobusiness\elements\Voucher as VoucherElement;
 use importantcoding\businesstobusiness\elements\Employee;
+use importantcoding\businesstobusiness\adjusters\VoucherAdjuster;
 // use importantcoding\businesstobusiness\services\Employee;
 use Craft;
 use craft\events\SiteEvent;
@@ -22,6 +23,7 @@ use craft\commerce\Plugin as Commerce;
 use craft\commerce\elements\Order;
 use craft\commerce\models\Customer;
 use importantcoding\businesstobusiness\models\Business;
+use craft\helpers\ArrayHelper;
 use yii\base\Exception;
 
 /**
@@ -140,6 +142,112 @@ public function getInvoice(Business $business): Order
                         
         }
         return true;
+    }
+
+    public function addOrderToInvoice(Order $order){
+        $orderTotal = $order->getTotal();
+        // die($orderTotal);
+        if($orderTotal < 0)
+        {
+            $orderTotal = 0;
+        }
+        $lineItems = $order->getLineItems();
+        $voucherItems = [];
+        foreach($lineItems as $lineItem)
+        {
+            // die(var_dump($lineItem));
+            foreach($lineItem->options as $option => $value)
+            {
+                
+                if($option == 'purchasedWithVoucher')
+                {
+                // die($option . $value);    
+                    ArrayHelper::append($voucherItems, $lineItem);
+                }
+    
+            }
+        }
+        // die('hmm');
+        // $originalPrice = $voucherItem->price;
+        // // $salePrice = $lineItem->salePrice;
+        // $companyPrice = $originalPrice
+        // die($salePrice);
+        //  $newOrder = Commerce::getInstance()->getOrders()->actionNewOrder();
+    
+        
+
+        $business = BusinessToBusiness::$plugin->business->getBusinessById($order->getFieldValue('businessId'));
+        // $voucherValue = 0;
+        // foreach ($order->getAdjustments() as $adjustment) {
+        //     if ($adjustment->type === VoucherAdjuster::ADJUSTMENT_TYPE) {
+        //         // $adjustmentAmount = -1 * $orderTotal;
+        //         // $adjustment->amount = $adjustmentAmount;
+        //         // $event = new VoucherAdjustmentsEvent([
+        //         //     'order' => $order,
+        //         //     'adjustments' => $adjustment,
+        //         // ]);
+                
+        //         // $invoice->setAdjustments($event->adjustments);
+        //         $voucherValue = $adjustment->amount;
+        //     }
+        // }
+    
+        $invoice = BusinessToBusiness::$plugin->invoices->getInvoice($business);
+        // die(var_dump($invoice));
+        $invoice->setRecalculationMode(Order::RECALCULATION_MODE_ALL);
+        // die(var_dump($invoice));
+        foreach($voucherItems as $voucherItem)
+        {
+            // die(var_dump($voucherItem));
+            // $lineItem = new LineItem;
+            $purchasable = Commerce::getInstance()->getPurchasables()->getPurchasableById($voucherItem->purchasableId);
+            // die(var_dump($purchasable));
+            // $purchasable = $lineItem->populateFromPurchasable($voucherItem->getPurchasable());
+            // die($purchasable);
+            // if($lineItem->price < 0)
+            // {
+            //     $lineItem->price = $voucherValue;
+            // }
+            
+            if(!$lineItem = Commerce::getInstance()->getLineItems()->resolveLineItem($invoice->id, $purchasable->id))
+            {
+                die('wtf!');
+                throw new Exception(Commerce::t('Can not create a new lineItem'));
+            }
+            
+            $customer = $order->customer;
+            $user = $customer->user;
+            $employee = BusinessToBusiness::$plugin->employee->getEmployeeByUserId($user->id);
+            
+            // $employee = BusinessToBusiness::$plugin->employee->getEmployeeByUserId($currentUser->id);
+            // $employee = BusinessToBusiness::$plugin->employee->getEmployeeById($employeeId['id']);
+            // die(var_dump($order->getAdjustments()));
+            // $lineItem->options = null;
+            $options = null;
+            foreach($order->getAdjustments() as $adjustment){
+                
+                if($adjustment->type == VoucherAdjuster::ADJUSTMENT_TYPE)
+                {
+                    // die($adjustment->amount);
+                    $options = '"voucherValue":'.'"'.$adjustment->amount.'", "voucherName":"'.$adjustment->name.'","employeeId":"'.$employee->id.'","employeeName":"'.$order->fullNameSpecialOrder.'"';
+                    // die($options);
+                }
+            }
+            // die($options);
+            $lineItem->options = '{'.$options.'}';
+            // die(var_dump($lineItem->options));
+            // $lineItem->options = "{'voucher':"$voucherItem"}";
+            // $lineItem->options['employeeId'] = $employee->id;
+            $invoice->addLineItem($lineItem);
+        }
+        
+        // 
+        if (!Craft::$app->getElements()->saveElement($invoice)) {
+            throw new Exception(Commerce::t('Can not create a new order'));
+        }   
+        // die('end');                    
+        $invoice->setRecalculationMode(Order::RECALCULATION_MODE_NONE);
+        // die(var_dump($newOrder));
     }
 }
 ?>

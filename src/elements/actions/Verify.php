@@ -5,7 +5,7 @@
  */
 
 namespace importantcoding\businesstobusiness\elements\actions;
-
+use importantcoding\businesstobusiness\BusinessToBusiness;
 use Craft;
 use craft\base\ElementAction;
 use craft\elements\db\ElementQueryInterface;
@@ -84,6 +84,7 @@ class Verify extends ElementAction
                     
                     // $order->setFieldValue('message', "Moved to rejected orders by deletion of employee");
                     // $order->setFieldValue('orderStatusId', 11);
+                    BusinessToBusiness::$plugin->invoices->addOrderToInvoice($order);
                     $order->message = "Moved to New Orders by VerifyAction";
                     $order->orderStatusId = 9;
                     if(!Craft::$app->getElements()->saveElement($order))
