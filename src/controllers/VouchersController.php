@@ -534,10 +534,11 @@ class VouchersController extends Controller
 
         $voucher->amount = Localization::normalizeNumber($request->getBodyParam('amount'));
         // $voucher->sku = $request->getBodyParam('sku');
-        $voucher->code = $request->getBodyParam('code');
+        $voucher->code = $request->getRequiredBodyParam('code');
         $voucher->productLimit = $request->getBodyParam('productLimit');
         $voucher->payrollDeduction = $request->getBodyParam('payrollDeduction');
         $voucher->products = $request->getBodyParam('products');
+        
         // die(var_dump($voucher->products));
         //  = $products;
         

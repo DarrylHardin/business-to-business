@@ -26,11 +26,12 @@
 
     {{ forms.textField({
         id: 'code',
-        label: 'Require Code? <span class="info">Insert any string of letters/numbers combo. Your employees will have to enter this code to connect their accounts to this voucher.</span>' | t('business-to-business'),
+        label: 'Code <span class="info">Insert any string of letters/numbers combo. Your employees will have to enter this code to connect their accounts to this voucher.</span>' | t('business-to-business'),
         name: 'code',
         value: voucher.code,
         placeholder: 'Enter code' | t('business-to-business'),
-        errors: voucher.getErrors('code')
+        errors: voucher.getErrors('code'),
+        required: true
     }) }}
 
     {{ forms.textField({

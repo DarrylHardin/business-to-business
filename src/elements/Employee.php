@@ -339,12 +339,12 @@ class Employee extends Element
                 }
             }
         }
-        
-        if($this->voucherId)
-        {
-            $voucher = BusinessToBusiness::$plugin->voucher->getVoucherById($this->voucherId);
-        }
-        
+        // $voucher = null;
+        // if($this->voucherId)
+        // {
+        //     $voucher = BusinessToBusiness::$plugin->voucher->getVoucherById($this->voucherId);
+        // }
+        $voucher = $this->getVoucher();
         
         
 
