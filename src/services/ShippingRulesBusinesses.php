@@ -39,6 +39,7 @@ class ShippingRulesBusinesses extends Component
     private $_fetchedAllShippingBusinesses;
     private $_fetchedAllShippingRules;
     private $_ShippingRulesByBusinessId = [];
+    private $_EnabledShippingRulesByBusinessId = [];
     /**
      * @var ShippingRule[]
      */
@@ -58,6 +59,26 @@ class ShippingRulesBusinesses extends Component
      */
      // Public Methods
     // =========================================================================
+
+    public function getEnabledShippingRulesByBusinessId(int $businessId)
+    {
+        if (isset($this->_EnabledShippingRulesByBusinessId[$businessId])) {
+            return $this->_EnabledShippingRulesByBusinessId[$businessId];
+        }
+
+        $rows = $this->_createShippingRulesBusinessQuery()
+            ->where(['businessId' => $businessId])
+            ->andWhere(['condition' => 'allow'])
+            ->all();
+       
+        $this->_EnabledShippingRulesByBusinessId[$businessId] = [];
+        foreach ($rows as $row) {
+            $this->_EnabledShippingRulesByBusinessId[$businessId][$row['id']] = new ShippingRulesBusinessModel($row);
+        }
+        
+        return $this->_EnabledShippingRulesByBusinessId[$businessId];
+
+    }
 
     public function getAllShippingRulesBusinesses(): array
     {

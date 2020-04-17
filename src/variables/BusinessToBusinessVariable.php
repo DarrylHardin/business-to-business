@@ -89,6 +89,16 @@ class BusinessToBusinessVariable
         return Voucher::find();
     }
 
+    public function getEnabledGatewayRulesByBusinessId(int $businessId)
+    {
+        return BusinessToBusiness::$plugin->gatewayRulesBusinesses->getEnabledGatewayRulesByBusinessId($businessId);
+    }
+
+    public function getEnabledShippingRulesByBusinessId(int $businessId)
+    {
+        return BusinessToBusiness::$plugin->shippingRulesBusinesses->getEnabledShippingRulesByBusinessId($businessId);
+    }
+
     public function getVouchersByBusiness(): array
     {   
         $user = Craft::$app->getUser()->getIdentity();

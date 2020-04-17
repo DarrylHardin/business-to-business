@@ -40,6 +40,7 @@ class GatewayRulesBusinesses extends Component
     private $_fetchedAllGatewayBusinesses;
     private $_fetchedAllGatewayRules;
     private $_GatewayRulesByBusinessId = [];
+    private $_EnabledGatewayRulesByBusinessId = [];
     // Public Methods
     // =========================================================================
 
@@ -55,6 +56,26 @@ class GatewayRulesBusinesses extends Component
      */
      // Public Methods
     // =========================================================================
+
+    public function getEnabledGatewayRulesByBusinessId(int $businessId)
+    {
+        if (isset($this->_EnabledGatewayRulesByBusinessId[$businessId])) {
+            return $this->_EnabledGatewayRulesByBusinessId[$businessId];
+        }
+
+        $rows = $this->_createGatewayRulesBusinessQuery()
+            ->where(['businessId' => $businessId])
+            ->andWhere(['condition' => 'allow'])
+            ->all();
+       
+        $this->_GatewayRulesByBusinessId[$businessId] = [];
+        foreach ($rows as $row) {
+            $this->_GatewayRulesByBusinessId[$businessId][$row['id']] = new GatewayRulesBusinessModel($row);
+        }
+        
+        return $this->_GatewayRulesByBusinessId[$businessId];
+
+    }
 
     public function getGatewayRulesByBusinessId(int $businessId)
     {

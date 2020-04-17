@@ -35,6 +35,7 @@ class ShippingRulesBusiness extends Model
     public $businessId;
     public $voucherId;
     public $shippingMethodId;
+    public $shippingMethodHandle;
     public $condition;
     public $name;
     // pretty sure the below will be deleted
@@ -49,8 +50,8 @@ class ShippingRulesBusiness extends Model
         return [
             [['id', 'businessId', 'voucherId', 'shippingMethodId'], 'number', 'integerOnly' => true],
             ['includeShippingCosts', 'number'],
-            ['name','condition', 'string'],
-            [['id', 'name', 'businessId', 'shippingMethodId', 'condition'], 'required'],
+            [['name','condition', 'shippingMethodHandle'], 'string'],
+            [['id', 'name', 'businessId', 'shippingMethodId', 'shippingMethodHandle', 'condition'], 'required'],
         ];
     }
 

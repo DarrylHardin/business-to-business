@@ -158,6 +158,7 @@ class Install extends Migration
                     'uid' => $this->uid(),
 
                     // foreign keys
+                    'shippingMethodHandle' => $this->string()->notNull(),
                     'shippingMethodId' => $this->integer()->notNull(),
                     'businessId' => $this->integer()->notNull(),
                     'voucherId' => $this->integer(),
